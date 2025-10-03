@@ -13,6 +13,7 @@ import { z } from 'zod';
 import { CATEGORY_NAMES, PRIORITIES } from '@/lib/constants';
 
 const PaymentItemSchema = z.object({
+  id: z.string().optional().describe('Unique identifier for the extracted expense.'),
   description: z.string().describe('The description of the payment.'),
   amount: z.number().describe('The amount of the payment. Negative for income, positive for expenses.'),
   dueDate: z.string().describe('The due date of the payment in ISO 8601 format.'),
@@ -78,6 +79,13 @@ const extractExpensesFlow = ai.defineFlow(
   },
   async (input) => {
     const { output } = await extractExpensesPrompt(input);
+    // Add unique IDs to extracted expenses if not present
+    if (output && output.expenses) {
+      output.expenses = output.expenses.map(expense => ({
+        ...expense,
+        id: expense.id || crypto.randomUUID(),
+      }));
+    }
     return output || { expenses: [] };
   }
 );

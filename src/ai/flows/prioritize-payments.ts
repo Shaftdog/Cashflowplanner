@@ -10,16 +10,15 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
-
-const PriorityLevelSchema = z.enum(['low', 'medium', 'high', 'critical']);
+import { CATEGORY_NAMES, PRIORITIES } from '@/lib/constants';
 
 const PaymentItemSchema = z.object({
   id: z.string(),
   description: z.string(),
   amount: z.number(),
   dueDate: z.string(),
-  category: z.string(),
-  priority: PriorityLevelSchema,
+  category: z.enum(CATEGORY_NAMES),
+  priority: z.enum(PRIORITIES),
   notes: z.string().optional(),
   createdAt: z.string(),
 });

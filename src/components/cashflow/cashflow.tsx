@@ -78,7 +78,6 @@ export default function Cashflow({
             onEditItem={handleEdit}
             onDeleteItem={deleteItem}
             financials={financials}
-            updateItem={updateItem}
             addItem={addItem}
           />
         ))}

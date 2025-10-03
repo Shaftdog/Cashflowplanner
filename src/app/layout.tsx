@@ -39,20 +39,24 @@ export default function RootLayout({
         <SidebarProvider>
           <Sidebar>
             <SidebarHeader>
-              <h1 className="text-2xl font-bold">ProductivityAI</h1>
+              <h1 className="text-2xl font-bold">ROI CashFlow Commander</h1>
             </SidebarHeader>
             <SidebarContent>
               <SidebarMenu>
                 <SidebarMenuItem>
-                  <SidebarMenuButton href="/" isActive>
-                    <LayoutGrid />
-                    Cashflow
+                  <SidebarMenuButton asChild>
+                    <button data-tab-trigger="cashflow" className="w-full">
+                      <LayoutGrid />
+                      Cashflow
+                    </button>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <SidebarMenuButton href="/">
-                    <ReceiptText />
-                    Capture
+                  <SidebarMenuButton asChild>
+                    <button data-tab-trigger="capture" className="w-full">
+                      <ReceiptText />
+                      Capture
+                    </button>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>

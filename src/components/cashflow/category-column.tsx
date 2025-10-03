@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import type { PaymentItem, CategoryConfig, CategoryName } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -12,6 +12,7 @@ import type { PrioritizePaymentsOutput } from '@/ai/flows/prioritize-payments';
 import AiPriorityDialog from './ai-priority-dialog';
 import { Sparkles, Repeat } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { formatCurrency, getWeekOfMonth } from '@/lib/utils-helpers';
 
 interface CategoryColumnProps {
   category: CategoryConfig;
@@ -22,23 +23,8 @@ interface CategoryColumnProps {
     availableFunds: number;
     savingsReserve: number;
   };
-  updateItem: (id: string, updatedFields: Partial<PaymentItem>) => void;
   addItem: (item: Omit<PaymentItem, 'id' | 'createdAt'>) => void;
 }
-
-const getWeekOfMonth = (date: Date) => {
-  const firstDay = new Date(date.getFullYear(), date.getMonth(), 1).getDay();
-  const dayOfMonth = date.getDate();
-  return Math.ceil((dayOfMonth + firstDay) / 7);
-};
-
-
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-  }).format(value);
-};
 
 export default function CategoryColumn({
   category,
@@ -53,8 +39,16 @@ export default function CategoryColumn({
   const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  const sortedItems = [...items].sort((a, b) => PRIORITY_ORDER[b.priority] - PRIORITY_ORDER[a.priority]);
-  const categoryTotal = items.reduce((sum, item) => sum + item.amount, 0);
+  // Memoize expensive computations
+  const sortedItems = useMemo(
+    () => [...items].sort((a, b) => PRIORITY_ORDER[b.priority] - PRIORITY_ORDER[a.priority]),
+    [items]
+  );
+  
+  const categoryTotal = useMemo(
+    () => items.reduce((sum, item) => sum + item.amount, 0),
+    [items]
+  );
 
   const handleRunAiPrioritization = async () => {
     setIsAiLoading(true);

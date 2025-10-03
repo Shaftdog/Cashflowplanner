@@ -41,8 +41,8 @@ export default function Capture({ onAddItems }: CaptureProps) {
   };
   
   const handleAddSelected = (selectedItems: typeof extractedExpenses) => {
-    onAddItems(selectedItems.map(({isRecurring, ...item}) => ({...item, category: isRecurring ? 'Recurring' : item.category})));
-    setExtractedExpenses(prev => prev.filter(exp => !selectedItems.some(item => item.description === exp.description && item.amount === exp.amount)));
+    onAddItems(selectedItems.map(({isRecurring, id, ...item}) => ({...item, category: isRecurring ? 'Recurring' : item.category})));
+    setExtractedExpenses(prev => prev.filter(exp => !selectedItems.some(item => item.id === exp.id)));
     toast({
         title: 'Expenses Added',
         description: `${selectedItems.length} expenses have been added to your cashflow.`,
@@ -50,7 +50,7 @@ export default function Capture({ onAddItems }: CaptureProps) {
   };
 
   const handleDiscardSelected = (selectedItems: typeof extractedExpenses) => {
-    setExtractedExpenses(prev => prev.filter(exp => !selectedItems.some(item => item.description === exp.description && item.amount === exp.amount)));
+    setExtractedExpenses(prev => prev.filter(exp => !selectedItems.some(item => item.id === exp.id)));
      toast({
         title: 'Expenses Discarded',
         description: `${selectedItems.length} extracted expenses have been discarded.`,

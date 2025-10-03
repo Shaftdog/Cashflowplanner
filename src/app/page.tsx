@@ -1,12 +1,20 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useCashflowData } from '@/hooks/use-cashflow-data';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Cashflow from '@/components/cashflow/cashflow';
 import Capture from '@/components/capture/capture';
 import type { PaymentItem } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
+import { Download, Upload, MoreVertical } from 'lucide-react';
 
 export default function Home() {
   const {
@@ -17,9 +25,30 @@ export default function Home() {
     updateItem,
     deleteItem,
     isLoaded,
+    exportData,
+    importData,
   } = useCashflowData();
 
   const [editingItem, setEditingItem] = useState<PaymentItem | null>(null);
+  const [activeTab, setActiveTab] = useState('capture');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Handle sidebar tab switching
+  useEffect(() => {
+    const handleTabSwitch = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const button = target.closest('[data-tab-trigger]');
+      if (button) {
+        const tabName = button.getAttribute('data-tab-trigger');
+        if (tabName) {
+          setActiveTab(tabName);
+        }
+      }
+    };
+
+    document.addEventListener('click', handleTabSwitch);
+    return () => document.removeEventListener('click', handleTabSwitch);
+  }, []);
 
   const handleEditItem = (item: PaymentItem) => {
     setEditingItem(item);
@@ -30,6 +59,21 @@ export default function Home() {
       updateItem(item.id, item);
     } else {
       addItem(item);
+    }
+  };
+
+  const handleImport = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      importData(file);
+    }
+    // Reset the input so the same file can be selected again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -56,7 +100,34 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background font-body p-4 sm:p-6 lg:p-8">
-      <Tabs defaultValue="capture" className="w-full">
+      <div className="mb-4 flex justify-end">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="icon">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={exportData}>
+              <Download className="mr-2 h-4 w-4" />
+              Export Data
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleImport}>
+              <Upload className="mr-2 h-4 w-4" />
+              Import Data
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".json"
+          onChange={handleFileChange}
+          className="hidden"
+          aria-label="Import data file"
+        />
+      </div>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 md:w-[400px]">
           <TabsTrigger value="capture">Capture</TabsTrigger>
           <TabsTrigger value="cashflow">Cashflow</TabsTrigger>
