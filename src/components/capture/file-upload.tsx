@@ -5,7 +5,7 @@ import { Upload } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 
 interface FileUploadProps {
-    onProcessFile: (content: string) => Promise<void>;
+    onProcessFile: (content: string, imageDataUrl?: string) => Promise<void>;
 }
 
 export default function FileUpload({ onProcessFile }: FileUploadProps) {
@@ -19,40 +19,58 @@ export default function FileUpload({ onProcessFile }: FileUploadProps) {
     setIsUploading(true);
     setProgress(30);
 
-    // This is a simplified text reader. For DOC, PDF, you'd need a library like Mammoth.js or pdf.js
-    const reader = new FileReader();
-    reader.onprogress = (event) => {
+    if (file.type.startsWith('image/')) {
+      // Read image as data URL for Gemini vision API
+      console.log('[DEBUG FileUpload] Processing image file:', file.name, file.type);
+      const reader = new FileReader();
+      reader.onprogress = (event) => {
         if(event.lengthComputable) {
-            const percent = Math.round((event.loaded / event.total) * 100);
-            setProgress(30 + (percent * 0.6)); // Scale progress to 30-90% range
+          const percent = Math.round((event.loaded / event.total) * 100);
+          setProgress(30 + (percent * 0.6)); // Scale progress to 30-90% range
         }
-    };
-    reader.onload = async (event) => {
-      const text = event.target?.result as string;
-      await onProcessFile(text);
-      setProgress(100);
-      setTimeout(() => {
+      };
+      reader.onload = async (event) => {
+        const dataUrl = event.target?.result as string;
+        console.log('[DEBUG FileUpload] Image loaded as data URL, length:', dataUrl.length);
+        // Send both filename as text and image data
+        await onProcessFile(`Image: ${file.name}`, dataUrl);
+        setProgress(100);
+        setTimeout(() => {
           setIsUploading(false);
           setProgress(0);
-      }, 500);
-    };
-    reader.onerror = () => {
+        }, 500);
+      };
+      reader.onerror = () => {
+        console.error("[DEBUG FileUpload] Failed to read image file");
+        setIsUploading(false);
+        setProgress(0);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      // Read text-based files
+      const reader = new FileReader();
+      reader.onprogress = (event) => {
+        if(event.lengthComputable) {
+          const percent = Math.round((event.loaded / event.total) * 100);
+          setProgress(30 + (percent * 0.6)); // Scale progress to 30-90% range
+        }
+      };
+      reader.onload = async (event) => {
+        const text = event.target?.result as string;
+        await onProcessFile(text);
+        setProgress(100);
+        setTimeout(() => {
+          setIsUploading(false);
+          setProgress(0);
+        }, 500);
+      };
+      reader.onerror = () => {
         console.error("Failed to read file");
         setIsUploading(false);
         setProgress(0);
+      };
+      reader.readAsText(file);
     }
-    
-    if (file.type.startsWith('image/')) {
-         // OCR would be needed for images. This is a placeholder.
-         console.warn("Image OCR is not implemented. Processing filename as text.");
-         await onProcessFile(`File name: ${file.name}`);
-         setProgress(100);
-         setTimeout(() => setIsUploading(false), 500);
-    } else {
-        reader.readAsText(file);
-    }
-
-
   }, [onProcessFile]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({ 

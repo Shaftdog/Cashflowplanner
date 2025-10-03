@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { useCashflowData } from '@/hooks/use-cashflow-data';
+import { useCashflowDataSupabase } from '@/hooks/use-cashflow-data-supabase';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Cashflow from '@/components/cashflow/cashflow';
 import Capture from '@/components/capture/capture';
@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { Download, Upload, MoreVertical } from 'lucide-react';
+import { AuthButton } from '@/components/auth/auth-button';
 
 export default function Home() {
   const {
@@ -27,7 +28,8 @@ export default function Home() {
     isLoaded,
     exportData,
     importData,
-  } = useCashflowData();
+    user,
+  } = useCashflowDataSupabase();
 
   const [editingItem, setEditingItem] = useState<PaymentItem | null>(null);
   const [activeTab, setActiveTab] = useState('capture');
@@ -100,32 +102,36 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background font-body p-4 sm:p-6 lg:p-8">
-      <div className="mb-4 flex justify-end">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={exportData}>
-              <Download className="mr-2 h-4 w-4" />
-              Export Data
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleImport}>
-              <Upload className="mr-2 h-4 w-4" />
-              Import Data
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".json"
-          onChange={handleFileChange}
-          className="hidden"
-          aria-label="Import data file"
-        />
+      <div className="mb-4 flex justify-between items-center">
+        <h1 className="text-2xl font-bold">ROI CashFlow Commander</h1>
+        <div className="flex items-center gap-2">
+          <AuthButton user={user} />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={exportData}>
+                <Download className="mr-2 h-4 w-4" />
+                Export Data
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleImport}>
+                <Upload className="mr-2 h-4 w-4" />
+                Import Data
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            onChange={handleFileChange}
+            className="hidden"
+            aria-label="Import data file"
+          />
+        </div>
       </div>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 md:w-[400px]">

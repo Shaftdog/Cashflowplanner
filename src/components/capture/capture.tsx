@@ -21,7 +21,10 @@ export default function Capture({ onAddItems }: CaptureProps) {
   const handleTextSubmit = async (text: string) => {
     setIsExtracting(true);
     try {
+      console.log('[DEBUG] Sending to API:', { text: text.substring(0, 100) + '...' });
       const result = await extractExpenses({ text });
+      console.log('[DEBUG] API Response:', result);
+      console.log('[DEBUG] Tasks extracted:', result.expenses.length);
       setExtractedExpenses(prev => [...prev, ...result.expenses]);
     } catch (error) {
       console.error('Failed to extract expenses:', error);
@@ -35,9 +38,36 @@ export default function Capture({ onAddItems }: CaptureProps) {
     }
   };
 
-  const handleFileProcess = async (text: string) => {
-    // This can be the same as handleTextSubmit or have custom logic for files
-    await handleTextSubmit(text);
+  const handleFileProcess = async (text: string, imageDataUrl?: string) => {
+    setIsExtracting(true);
+    try {
+      console.log('[DEBUG handleFileProcess] Processing file:', { 
+        text: text.substring(0, 100), 
+        hasImage: !!imageDataUrl,
+        imageLength: imageDataUrl?.length 
+      });
+      const result = await extractExpenses({ text, imageDataUrl });
+      console.log('[DEBUG handleFileProcess] API Response:', result);
+      console.log('[DEBUG handleFileProcess] Tasks extracted:', result.expenses.length);
+      setExtractedExpenses(prev => [...prev, ...result.expenses]);
+      
+      if (result.expenses.length === 0) {
+        toast({
+          title: 'No Tasks Found',
+          description: 'Could not extract any tasks from the uploaded file. Please try a different image or describe your expenses in the chat.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Failed to extract expenses from file:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to extract expenses from file.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsExtracting(false);
+    }
   };
   
   const handleAddSelected = (selectedItems: typeof extractedExpenses) => {

@@ -25,6 +25,7 @@ const PaymentItemSchema = z.object({
 
 const ExtractExpensesInputSchema = z.object({
   text: z.string().describe('The user input text describing expenses.'),
+  imageDataUrl: z.string().optional().describe('Base64 encoded image data URL for image-based extraction.'),
 });
 
 export type ExtractExpensesInput = z.infer<typeof ExtractExpensesInputSchema>;
@@ -76,14 +77,60 @@ const extractExpensesFlow = ai.defineFlow(
     outputSchema: ExtractExpensesOutputSchema,
   },
   async (input) => {
-    const { output } = await extractExpensesPrompt(input);
+    console.log('[DEBUG extractExpensesFlow] Input received:', { 
+      hasText: !!input.text, 
+      textLength: input.text?.length,
+      hasImage: !!input.imageDataUrl,
+      imageUrlPrefix: input.imageDataUrl?.substring(0, 50)
+    });
+    
+    let result;
+    if (input.imageDataUrl) {
+      // Use Gemini's vision capabilities for image input
+      console.log('[DEBUG] Processing image with Gemini vision');
+      const imagePrompt = `Analyze this image and extract all financial information including bills, invoices, receipts, or any payment-related information. Today's date is ${new Date().toDateString()}.
+      
+Extract structured expense data with the following details:
+- Description of each payment/expense
+- Amount (default to 0 if not visible)
+- Due date (use today's date if not specified)
+- Category: Use 'Current Week' for bills due soon, 'Next Week' for later bills, 'Needs Work' for unclear items, 'Recurring' if it appears to be a recurring payment
+- Priority: 'critical' for urgent/overdue, 'high' for important, 'medium' for normal, 'low' for flexible
+- Whether it's recurring
+- Any additional notes
+
+If the image contains text, also extract: ${input.text}
+
+Return the data as a JSON object with an expenses array.`;
+
+      const response = await ai.generate({
+        model: 'googleai/gemini-2.0-flash-exp',
+        prompt: [
+          { text: imagePrompt },
+          { media: { url: input.imageDataUrl } }
+        ],
+        output: {
+          schema: ExtractExpensesOutputSchema,
+        },
+      });
+      
+      result = response.output;
+      console.log('[DEBUG] Gemini vision response:', result);
+    } else {
+      // Use text-based extraction
+      const promptResult = await extractExpensesPrompt(input);
+      result = promptResult.output;
+    }
+    
     // Add unique IDs to extracted expenses if not present
-    if (output && output.expenses) {
-      output.expenses = output.expenses.map(expense => ({
+    if (result && result.expenses) {
+      result.expenses = result.expenses.map(expense => ({
         ...expense,
         id: expense.id || crypto.randomUUID(),
       }));
     }
-    return output || { expenses: [] };
+    
+    console.log('[DEBUG extractExpensesFlow] Final result:', { expenseCount: result?.expenses?.length || 0 });
+    return result || { expenses: [] };
   }
 );
