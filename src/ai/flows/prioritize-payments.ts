@@ -42,6 +42,7 @@ export async function prioritizePayments(input: PrioritizePaymentsInput): Promis
 
 const prioritizePaymentsPrompt = ai.definePrompt({
   name: 'prioritizePaymentsPrompt',
+  model: 'googleai/gemini-1.5-flash',
   input: {
     schema: PrioritizePaymentsInputSchema,
   },
@@ -75,7 +76,6 @@ const prioritizePaymentsPrompt = ai.definePrompt({
     ]
   }`,
   config: {
-    model: 'googleai/gemini-1.5-flash',
     helpers: {
       subtract: (a: number, b: number) => a - b,
     },

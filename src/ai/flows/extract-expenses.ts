@@ -41,6 +41,7 @@ export async function extractExpenses(input: ExtractExpensesInput): Promise<Extr
 
 const extractExpensesPrompt = ai.definePrompt({
   name: 'extractExpensesPrompt',
+  model: 'googleai/gemini-1.5-flash',
   input: {
     schema: ExtractExpensesInputSchema,
   },
@@ -65,9 +66,6 @@ const extractExpensesPrompt = ai.definePrompt({
 
   Return the extracted expenses as a JSON object. If no expenses are found, return an empty array.
   `,
-  config: {
-    model: 'googleai/gemini-1.5-flash',
-  },
 });
 
 
