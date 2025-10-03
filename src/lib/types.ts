@@ -15,6 +15,7 @@ export const CATEGORY_NAMES = [
   'Payment In Transit',
   'Action Required',
   'Processing (Tasks Assigned)',
+  'Recurring Expenses',
   'Backlog',
 ] as const;
 

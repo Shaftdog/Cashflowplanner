@@ -54,7 +54,8 @@ export default function Home() {
         </header>
         <div className="space-y-6">
           <Skeleton className="h-24 w-full" />
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
+            <Skeleton className="h-64 w-full" />
             <Skeleton className="h-64 w-full" />
             <Skeleton className="h-64 w-full" />
             <Skeleton className="h-64 w-full" />
@@ -86,7 +87,7 @@ export default function Home() {
           totalExpenses={totalExpenses}
         />
 
-        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
           {CATEGORIES.map(category => (
             <CategoryColumn
               key={category.id}
