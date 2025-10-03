@@ -76,9 +76,11 @@ const prioritizePaymentsPrompt = ai.definePrompt({
     ]
   }`,
   config: {
+    model: 'googleai/gemini-2.5-flash',
     helpers: {
       subtract: (a: number, b: number) => a - b,
     },
+    knownHelpersOnly: false,
   },
 });
 
