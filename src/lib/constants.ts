@@ -19,7 +19,7 @@ export const CATEGORIES: CategoryConfig[] = [
   // Action
   { id: 'Action Required', title: 'Action Required', color: 'bg-orange-100 dark:bg-orange-900', textColor: 'text-orange-600 dark:text-orange-300' },
   { id: 'Processing (Tasks Assigned)', title: 'Processing', color: 'bg-cyan-100 dark:bg-cyan-900', textColor: 'text-cyan-600 dark:text-cyan-300' },
-  { id: 'Recurring Expenses', title: 'Recurring Expenses', color: 'bg-teal-100 dark:bg-teal-900', textColor: 'text-teal-600 dark:text-teal-300' },
+  { id: 'Recurring', title: 'Recurring', color: 'bg-teal-100 dark:bg-teal-900', textColor: 'text-teal-600 dark:text-teal-300' },
   { id: 'Backlog', title: 'Backlog', color: 'bg-gray-100 dark:bg-gray-800', textColor: 'text-gray-600 dark:text-gray-300' },
 ];
 

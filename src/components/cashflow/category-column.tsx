@@ -10,7 +10,8 @@ import { PRIORITY_ORDER } from '@/lib/constants';
 import { prioritizePayments } from '@/ai/flows/prioritize-payments';
 import type { PrioritizePaymentsOutput } from '@/ai/flows/prioritize-payments';
 import AiPriorityDialog from './ai-priority-dialog';
-import { Sparkles } from 'lucide-react';
+import { Sparkles, Repeat } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface CategoryColumnProps {
   category: CategoryConfig;
@@ -22,7 +23,15 @@ interface CategoryColumnProps {
     savingsReserve: number;
   };
   updateItem: (id: string, updatedFields: Partial<PaymentItem>) => void;
+  addItem: (item: Omit<PaymentItem, 'id' | 'createdAt'>) => void;
 }
+
+const getWeekOfMonth = (date: Date) => {
+  const firstDay = new Date(date.getFullYear(), date.getMonth(), 1).getDay();
+  const dayOfMonth = date.getDate();
+  return Math.ceil((dayOfMonth + firstDay) / 7);
+};
+
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -37,10 +46,12 @@ export default function CategoryColumn({
   onEditItem,
   onDeleteItem,
   financials,
+  addItem
 }: CategoryColumnProps) {
   const [isAiLoading, setIsAiLoading] = useState(false);
   const [aiResult, setAiResult] = useState<PrioritizePaymentsOutput | null>(null);
   const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
+  const { toast } = useToast();
 
   const sortedItems = [...items].sort((a, b) => PRIORITY_ORDER[b.priority] - PRIORITY_ORDER[a.priority]);
   const categoryTotal = items.reduce((sum, item) => sum + item.amount, 0);
@@ -63,6 +74,30 @@ export default function CategoryColumn({
     }
   };
 
+  const handleProcessRecurring = () => {
+    const recurringItems = items.filter(item => item.category === 'Recurring');
+    let itemsAdded = 0;
+    recurringItems.forEach(item => {
+      const dueDate = new Date(item.dueDate);
+      const weekOfMonth = getWeekOfMonth(dueDate);
+      
+      if (weekOfMonth >= 1 && weekOfMonth <= 5) {
+        const newCategory = `Week ${weekOfMonth}` as CategoryName;
+        addItem({
+          ...item,
+          category: newCategory,
+          notes: item.notes ? `${item.notes} (Recurring)` : '(Recurring)',
+        });
+        itemsAdded++;
+      }
+    });
+
+    toast({
+      title: 'Recurring Items Processed',
+      description: `${itemsAdded} items have been added to their respective weeks.`,
+    });
+  };
+
   return (
     <>
       <Card className={`flex flex-col ${category.color}`}>
@@ -77,6 +112,12 @@ export default function CategoryColumn({
             <Button size="sm" onClick={handleRunAiPrioritization} disabled={isAiLoading}>
               <Sparkles className="mr-2 h-4 w-4" />
               {isAiLoading ? 'Analyzing...' : 'AI Analyze'}
+            </Button>
+          )}
+          {category.id === 'Recurring' && (
+             <Button size="sm" onClick={handleProcessRecurring}>
+              <Repeat className="mr-2 h-4 w-4" />
+              Process
             </Button>
           )}
         </CardHeader>
