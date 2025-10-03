@@ -13,6 +13,8 @@ import AiPriorityDialog from './ai-priority-dialog';
 import { Sparkles, Repeat } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { formatCurrency, getWeekOfMonth } from '@/lib/utils-helpers';
+import { useDroppable } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 
 interface CategoryColumnProps {
   category: CategoryConfig;
@@ -38,6 +40,10 @@ export default function CategoryColumn({
   const [aiResult, setAiResult] = useState<PrioritizePaymentsOutput | null>(null);
   const [isAiDialogOpen, setIsAiDialogOpen] = useState(false);
   const { toast } = useToast();
+
+  const { setNodeRef, isOver } = useDroppable({
+    id: category.id,
+  });
 
   // Memoize expensive computations
   const sortedItems = useMemo(
@@ -92,9 +98,16 @@ export default function CategoryColumn({
     });
   };
 
+  const itemIds = sortedItems.map(item => item.id);
+
   return (
     <>
-      <Card className={`flex flex-col ${category.color}`}>
+      <Card 
+        ref={setNodeRef}
+        className={`flex flex-col ${category.color} ${
+          isOver ? 'ring-2 ring-primary ring-offset-2' : ''
+        }`}
+      >
         <CardHeader className="flex-row items-center justify-between space-y-0 border-b p-4">
           <div className="grid gap-1">
             <CardTitle className={`text-lg font-semibold ${category.textColor}`}>{category.title}</CardTitle>
@@ -119,17 +132,24 @@ export default function CategoryColumn({
           <ScrollArea className="h-80 w-full">
             <div className="p-4 space-y-3">
               {sortedItems.length > 0 ? (
-                sortedItems.map(item => (
-                  <ItemCard
-                    key={item.id}
-                    item={item}
-                    onEdit={onEditItem}
-                    onDelete={onDeleteItem}
-                  />
-                ))
+                <SortableContext
+                  items={itemIds}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {sortedItems.map(item => (
+                    <ItemCard
+                      key={item.id}
+                      item={item}
+                      onEdit={onEditItem}
+                      onDelete={onDeleteItem}
+                    />
+                  ))}
+                </SortableContext>
               ) : (
                 <div className="flex h-full min-h-24 items-center justify-center">
-                  <p className="text-sm text-muted-foreground">No items in this category.</p>
+                  <p className="text-sm text-muted-foreground">
+                    {isOver ? 'Drop here' : 'No items in this category.'}
+                  </p>
                 </div>
               )}
             </div>

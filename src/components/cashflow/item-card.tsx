@@ -22,14 +22,17 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { MoreVertical, Edit, Trash2, AlertTriangle, CalendarIcon, DollarSign } from 'lucide-react';
+import { MoreVertical, Edit, Trash2, AlertTriangle, CalendarIcon, DollarSign, GripVertical } from 'lucide-react';
 import { PRIORITY_STYLES } from '@/lib/constants';
 import { format } from 'date-fns';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface ItemCardProps {
   item: PaymentItem;
   onEdit: (item: PaymentItem) => void;
   onDelete: (id: string) => void;
+  isDragging?: boolean;
 }
 
 const formatCurrency = (value: number) => {
@@ -41,13 +44,55 @@ const formatCurrency = (value: number) => {
   return isNegative ? `+${formatted}` : formatted;
 };
 
-export default function ItemCard({ item, onEdit, onDelete }: ItemCardProps) {
+export default function ItemCard({ item, onEdit, onDelete, isDragging }: ItemCardProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging: isSortableDragging,
+  } = useSortable({ id: item.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isSortableDragging ? 0.5 : 1,
+  };
+
   const isIncome = item.amount < 0;
+
+  // Handle click on the card itself for editing
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Don't trigger edit if clicking on the dropdown menu or drag handle
+    if (
+      e.target instanceof HTMLElement &&
+      (e.target.closest('[data-dropdown]') || e.target.closest('[data-drag-handle]'))
+    ) {
+      return;
+    }
+    onEdit(item);
+  };
   return (
-    <Card className="shadow-sm transition-all hover:shadow-md">
+    <Card 
+      ref={setNodeRef}
+      style={style}
+      className="shadow-sm transition-all hover:shadow-md cursor-pointer relative"
+      onClick={handleCardClick}
+    >
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
-          <div className="flex-1 space-y-2">
+          {/* Drag handle */}
+          <div 
+            {...attributes} 
+            {...listeners}
+            data-drag-handle
+            className="absolute left-2 top-1/2 -translate-y-1/2 cursor-grab active:cursor-grabbing p-1 hover:bg-accent rounded"
+          >
+            <GripVertical className="h-4 w-4 text-muted-foreground" />
+          </div>
+          
+          <div className="flex-1 space-y-2 ml-8">
             <p className="font-semibold text-foreground">{item.description}</p>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <span className={`flex items-center font-bold ${isIncome ? 'text-green-500' : 'text-red-500'}`}>
@@ -66,8 +111,8 @@ export default function ItemCard({ item, onEdit, onDelete }: ItemCardProps) {
               {item.priority}
             </Badge>
             <AlertDialog>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild data-dropdown>
                   <Button variant="ghost" size="icon" className="h-8 w-8">
                     <MoreVertical className="h-4 w-4" />
                   </Button>
