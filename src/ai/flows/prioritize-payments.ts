@@ -9,7 +9,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
+import {z} from 'zod';
 
 const PriorityLevelSchema = z.enum(['low', 'medium', 'high', 'critical']);
 
@@ -76,7 +76,7 @@ const prioritizePaymentsPrompt = ai.definePrompt({
     ]
   }`,
   config: {
-    model: 'googleai/gemini-2.5-flash',
+    model: 'googleai/gemini-1.5-flash',
     helpers: {
       subtract: (a: number, b: number) => a - b,
     },

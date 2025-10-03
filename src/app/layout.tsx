@@ -1,6 +1,19 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
+import {
+  SidebarProvider,
+  Sidebar,
+  SidebarHeader,
+  SidebarContent,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarInset,
+} from '@/components/ui/sidebar';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Plus, LayoutGrid, ReceiptText } from 'lucide-react';
 
 export const metadata: Metadata = {
   title: 'ROI CashFlow Commander',
@@ -23,7 +36,42 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased">
-        {children}
+        <SidebarProvider>
+          <Sidebar>
+            <SidebarHeader>
+              <h1 className="text-2xl font-bold">ProductivityAI</h1>
+            </SidebarHeader>
+            <SidebarContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton href="/" isActive>
+                    <LayoutGrid />
+                    Cashflow
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton href="/">
+                    <ReceiptText />
+                    Capture
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarContent>
+          </Sidebar>
+          <SidebarInset>
+            <header className="flex items-center justify-end gap-4 p-4">
+              <Button>
+                <Plus className="mr-2" />
+                Quick Add Task
+              </Button>
+              <Avatar>
+                <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
+                <AvatarFallback>SH</AvatarFallback>
+              </Avatar>
+            </header>
+            <main>{children}</main>
+          </SidebarInset>
+        </SidebarProvider>
         <Toaster />
       </body>
     </html>

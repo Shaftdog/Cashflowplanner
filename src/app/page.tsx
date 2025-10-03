@@ -1,14 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
-import type { PaymentItem, CategoryName } from '@/lib/types';
 import { useCashflowData } from '@/hooks/use-cashflow-data';
-import { CATEGORIES } from '@/lib/constants';
-import FinancialOverview from '@/components/cashflow/financial-overview';
-import CategoryColumn from '@/components/cashflow/category-column';
-import ItemDialog from '@/components/cashflow/item-dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import Cashflow from '@/components/cashflow/cashflow';
+import Capture from '@/components/capture/capture';
+import type { PaymentItem } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Home() {
@@ -22,28 +19,19 @@ export default function Home() {
     isLoaded,
   } = useCashflowData();
 
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<PaymentItem | null>(null);
-
-  const handleAddNewItem = () => {
-    setEditingItem(null);
-    setIsDialogOpen(true);
-  };
 
   const handleEditItem = (item: PaymentItem) => {
     setEditingItem(item);
-    setIsDialogOpen(true);
   };
 
   const handleSaveItem = (item: PaymentItem) => {
-    if (editingItem) {
+    if (item.id) {
       updateItem(item.id, item);
     } else {
       addItem(item);
     }
   };
-
-  const totalExpenses = items.reduce((sum, item) => sum + item.amount, 0);
 
   if (!isLoaded) {
     return (
@@ -67,49 +55,32 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-background font-body">
-      <main className="p-4 sm:p-6 lg:p-8">
-        <header className="mb-6 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">ROI CashFlow Commander</h1>
-            <p className="text-muted-foreground">
-              Manage your cash flow with precision and confidence.
-            </p>
-          </div>
-          <Button onClick={handleAddNewItem}>
-            <PlusCircle className="mr-2" />
-            Add New Item
-          </Button>
-        </header>
-
-        <FinancialOverview
-          financials={financials}
-          setFinancials={setFinancials}
-          totalExpenses={totalExpenses}
-        />
-
-        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          {CATEGORIES.map(category => (
-            <CategoryColumn
-              key={category.id}
-              category={category}
-              items={items.filter(item => item.category === category.id)}
-              onEditItem={handleEditItem}
-              onDeleteItem={deleteItem}
-              financials={financials}
-              updateItem={updateItem}
-              addItem={addItem}
-            />
-          ))}
-        </div>
-
-        <ItemDialog
-          isOpen={isDialogOpen}
-          onOpenChange={setIsDialogOpen}
-          onSave={handleSaveItem}
-          item={editingItem}
-        />
-      </main>
+    <div className="min-h-screen bg-background font-body p-4 sm:p-6 lg:p-8">
+      <Tabs defaultValue="capture" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 md:w-[400px]">
+          <TabsTrigger value="capture">Capture</TabsTrigger>
+          <TabsTrigger value="cashflow">Cashflow</TabsTrigger>
+        </TabsList>
+        <TabsContent value="capture">
+          <Capture
+            onAddItems={(newItems) => newItems.forEach(addItem)}
+          />
+        </TabsContent>
+        <TabsContent value="cashflow">
+          <Cashflow
+            financials={financials}
+            setFinancials={setFinancials}
+            items={items}
+            addItem={addItem}
+            updateItem={updateItem}
+            deleteItem={deleteItem}
+            editingItem={editingItem}
+            setEditingItem={setEditingItem}
+            onEditItem={handleEditItem}
+            onSaveItem={handleSaveItem}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

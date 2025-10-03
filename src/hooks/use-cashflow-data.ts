@@ -54,7 +54,7 @@ const getInitialItems = (): PaymentItem[] => {
         description: 'Software Subscription',
         amount: 49.99,
         dueDate: new Date().toISOString(),
-        category: 'Recurring Expenses',
+        category: 'Recurring',
         priority: 'low',
         notes: 'Recurring monthly charge',
         createdAt: new Date().toISOString(),

@@ -1,5 +1,24 @@
 import type { CategoryConfig, CategoryName, Priority } from './types';
 
+export const CATEGORY_NAMES = [
+  'Needs Work',
+  'Week 1',
+  'Week 2',
+  'Week 3',
+  'Week 4',
+  'Week 5',
+  'Current Week',
+  'Next Week',
+  'Overdue',
+  'In Transit',
+  'Suspected to Be Paid or Received',
+  'Payment In Transit',
+  'Action Required',
+  'Processing (Tasks Assigned)',
+  'Recurring',
+  'Backlog',
+] as const;
+
 export const CATEGORIES: CategoryConfig[] = [
   // Initial & Planning
   { id: 'Needs Work', title: 'Needs Work', color: 'bg-slate-100 dark:bg-slate-800', textColor: 'text-slate-600 dark:text-slate-300' },
@@ -23,7 +42,7 @@ export const CATEGORIES: CategoryConfig[] = [
   { id: 'Backlog', title: 'Backlog', color: 'bg-gray-100 dark:bg-gray-800', textColor: 'text-gray-600 dark:text-gray-300' },
 ];
 
-export const PRIORITIES: Priority[] = ['low', 'medium', 'high', 'critical'];
+export const PRIORITIES: ['low', 'medium', 'high', 'critical'] = ['low', 'medium', 'high', 'critical'];
 
 export const PRIORITY_ORDER: Record<Priority, number> = {
   critical: 4,
