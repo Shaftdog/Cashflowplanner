@@ -5,6 +5,10 @@ import { Button } from '@/components/ui/button';
 import { PlusCircle, Calendar, Sparkles } from 'lucide-react';
 import type { RecurringExpense, PaymentItem } from '@/lib/types';
 import RecurringDialog from '@/components/recurring/recurring-dialog';
+import RecurringChat from '@/components/recurring/recurring-chat';
+import RecurringFileUpload from '@/components/recurring/recurring-file-upload';
+import ExtractedRecurring from '@/components/recurring/extracted-recurring';
+import { extractRecurringExpenses, ExtractRecurringOutput } from '@/ai/flows/extract-recurring';
 import {
   Card,
   CardContent,
@@ -42,6 +46,8 @@ export default function Recurring({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<RecurringExpense | null>(null);
   const [isScheduling, setIsScheduling] = useState(false);
+  const [extractedExpenses, setExtractedExpenses] = useState<ExtractRecurringOutput['expenses']>([]);
+  const [isExtracting, setIsExtracting] = useState(false);
   const { toast } = useToast();
 
   const handleAddNew = () => {
@@ -60,6 +66,85 @@ export default function Recurring({
     } else {
       addExpense(expense);
     }
+  };
+
+  const handleTextSubmit = async (text: string) => {
+    setIsExtracting(true);
+    try {
+      console.log('[DEBUG] Extracting recurring expenses from text:', { text: text.substring(0, 100) + '...' });
+      const result = await extractRecurringExpenses({ text });
+      console.log('[DEBUG] API Response:', result);
+      console.log('[DEBUG] Recurring expenses extracted:', result.expenses.length);
+      setExtractedExpenses(prev => [...prev, ...result.expenses]);
+      
+      if (result.expenses.length === 0) {
+        toast({
+          title: 'No Recurring Expenses Found',
+          description: 'Could not find any recurring expenses in your text. Make sure to mention recurring patterns like "monthly" or "every month".',
+        });
+      }
+    } catch (error) {
+      console.error('Failed to extract recurring expenses:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to extract recurring expenses from text.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsExtracting(false);
+    }
+  };
+
+  const handleFileProcess = async (text: string, imageDataUrl?: string) => {
+    setIsExtracting(true);
+    try {
+      console.log('[DEBUG handleFileProcess] Processing file for recurring expenses:', { 
+        text: text.substring(0, 100), 
+        hasImage: !!imageDataUrl,
+        imageLength: imageDataUrl?.length 
+      });
+      const result = await extractRecurringExpenses({ text, imageDataUrl });
+      console.log('[DEBUG handleFileProcess] API Response:', result);
+      console.log('[DEBUG handleFileProcess] Recurring expenses extracted:', result.expenses.length);
+      setExtractedExpenses(prev => [...prev, ...result.expenses]);
+      
+      if (result.expenses.length === 0) {
+        toast({
+          title: 'No Recurring Expenses Found',
+          description: 'Could not extract any recurring expenses from the uploaded file. Please try a different image or describe your recurring bills in the chat.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
+      console.error('Failed to extract recurring expenses from file:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to extract recurring expenses from file.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsExtracting(false);
+    }
+  };
+
+  const handleAddExtracted = (selectedItems: typeof extractedExpenses) => {
+    selectedItems.forEach(({ id, ...item }) => {
+      addExpense(item);
+    });
+    setExtractedExpenses(prev => prev.filter(exp => !selectedItems.some(item => item.id === exp.id)));
+    toast({
+      title: 'Recurring Expenses Added',
+      description: `${selectedItems.length} recurring expense${selectedItems.length !== 1 ? 's' : ''} have been added.`,
+    });
+  };
+
+  const handleDiscardExtracted = (selectedItems: typeof extractedExpenses) => {
+    setExtractedExpenses(prev => prev.filter(exp => !selectedItems.some(item => item.id === exp.id)));
+    toast({
+      title: 'Expenses Discarded',
+      description: `${selectedItems.length} extracted expense${selectedItems.length !== 1 ? 's' : ''} have been discarded.`,
+      variant: 'destructive'
+    });
   };
 
   const handleScheduleToCashflow = async () => {
@@ -138,6 +223,33 @@ export default function Recurring({
           </Button>
         </div>
       </header>
+
+      {/* AI Extraction Interface */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        <Card>
+          <CardHeader>
+            <CardTitle>AI Recurring Expense Extraction</CardTitle>
+            <CardDescription>Upload files or describe your recurring bills in natural language</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <RecurringFileUpload onProcessFile={handleFileProcess} />
+            <RecurringChat onSendMessage={handleTextSubmit} isSending={isExtracting} />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Extracted Recurring Expenses</CardTitle>
+            <CardDescription>{extractedExpenses.length} expense{extractedExpenses.length !== 1 ? 's' : ''} found</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ExtractedRecurring
+              expenses={extractedExpenses}
+              onAdd={handleAddExtracted}
+              onDiscard={handleDiscardExtracted}
+            />
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Summary Card */}
       <Card className="mb-6">
