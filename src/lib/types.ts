@@ -21,3 +21,14 @@ export interface CategoryConfig {
   color: string;
   textColor: string;
 }
+
+export interface RecurringExpense {
+  id: string;
+  description: string;
+  amount: number;
+  dayOfMonth: number;
+  priority: Priority;
+  notes?: string;
+  isActive: boolean;
+  createdAt: string;
+}

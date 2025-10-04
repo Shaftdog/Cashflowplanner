@@ -2,9 +2,11 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useCashflowDataSupabase } from '@/hooks/use-cashflow-data-supabase';
+import { useRecurringExpenses } from '@/hooks/use-recurring-expenses';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Cashflow from '@/components/cashflow/cashflow';
 import Capture from '@/components/capture/capture';
+import Recurring from '@/components/recurring/recurring';
 import type { PaymentItem } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -30,6 +32,14 @@ export default function Home() {
     importData,
     user,
   } = useCashflowDataSupabase();
+
+  const {
+    expenses: recurringExpenses,
+    addExpense: addRecurringExpense,
+    updateExpense: updateRecurringExpense,
+    deleteExpense: deleteRecurringExpense,
+    isLoaded: recurringLoaded,
+  } = useRecurringExpenses(user);
 
   const [editingItem, setEditingItem] = useState<PaymentItem | null>(null);
   const [activeTab, setActiveTab] = useState('capture');
@@ -79,7 +89,7 @@ export default function Home() {
     }
   };
 
-  if (!isLoaded) {
+  if (!isLoaded || !recurringLoaded) {
     return (
       <div className="min-h-screen bg-background p-4 sm:p-6 lg:p-8">
         <header className="mb-6">
@@ -134,9 +144,10 @@ export default function Home() {
         </div>
       </div>
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 md:w-[400px]">
+        <TabsList className="grid w-full grid-cols-3 md:w-[600px]">
           <TabsTrigger value="capture">Capture</TabsTrigger>
           <TabsTrigger value="cashflow">Cashflow</TabsTrigger>
+          <TabsTrigger value="recurring">Recurring</TabsTrigger>
         </TabsList>
         <TabsContent value="capture">
           <Capture
@@ -155,6 +166,14 @@ export default function Home() {
             setEditingItem={setEditingItem}
             onEditItem={handleEditItem}
             onSaveItem={handleSaveItem}
+          />
+        </TabsContent>
+        <TabsContent value="recurring">
+          <Recurring
+            expenses={recurringExpenses}
+            addExpense={addRecurringExpense}
+            updateExpense={updateRecurringExpense}
+            deleteExpense={deleteRecurringExpense}
           />
         </TabsContent>
       </Tabs>

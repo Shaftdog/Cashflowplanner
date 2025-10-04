@@ -89,6 +89,52 @@ export interface Database {
           }
         ]
       }
+      recurring_expenses: {
+        Row: {
+          id: string
+          user_id: string
+          description: string
+          amount: number
+          day_of_month: number
+          priority: 'low' | 'medium' | 'high' | 'critical'
+          notes: string | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          description: string
+          amount: number
+          day_of_month: number
+          priority: 'low' | 'medium' | 'high' | 'critical'
+          notes?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          description?: string
+          amount?: number
+          day_of_month?: number
+          priority?: 'low' | 'medium' | 'high' | 'critical'
+          notes?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recurring_expenses_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
