@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Calendar } from 'lucide-react';
-import type { RecurringExpense } from '@/lib/types';
+import { PlusCircle, Calendar, Sparkles } from 'lucide-react';
+import type { RecurringExpense, PaymentItem } from '@/lib/types';
 import RecurringDialog from '@/components/recurring/recurring-dialog';
 import {
   Card,
@@ -21,12 +21,15 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { scheduleRecurringExpenses } from '@/ai/flows/schedule-recurring';
 
 interface RecurringProps {
   expenses: RecurringExpense[];
   addExpense: (expense: Omit<RecurringExpense, 'id' | 'createdAt'>) => void;
   updateExpense: (id: string, expense: Partial<RecurringExpense>) => void;
   deleteExpense: (id: string) => void;
+  onScheduleToCashflow?: (items: Omit<PaymentItem, 'id' | 'createdAt'>[]) => void;
 }
 
 export default function Recurring({
@@ -34,9 +37,12 @@ export default function Recurring({
   addExpense,
   updateExpense,
   deleteExpense,
+  onScheduleToCashflow,
 }: RecurringProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<RecurringExpense | null>(null);
+  const [isScheduling, setIsScheduling] = useState(false);
+  const { toast } = useToast();
 
   const handleAddNew = () => {
     setEditingExpense(null);
@@ -56,6 +62,52 @@ export default function Recurring({
     }
   };
 
+  const handleScheduleToCashflow = async () => {
+    if (!onScheduleToCashflow) {
+      toast({
+        title: 'Feature Not Available',
+        description: 'Scheduling function is not available.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsScheduling(true);
+    try {
+      const result = await scheduleRecurringExpenses({
+        recurringExpenses: expenses,
+        currentDate: new Date().toISOString(),
+      });
+
+      // Convert scheduled payments to payment items
+      const paymentItems = result.scheduledPayments.map(payment => ({
+        description: payment.description,
+        amount: payment.amount,
+        dueDate: payment.dueDate,
+        category: payment.category,
+        priority: payment.priority,
+        notes: payment.notes,
+      }));
+
+      // Add all items to cashflow
+      onScheduleToCashflow(paymentItems);
+
+      toast({
+        title: 'Expenses Scheduled! ✨',
+        description: result.summary,
+      });
+    } catch (error) {
+      console.error('Failed to schedule recurring expenses', error);
+      toast({
+        title: 'Scheduling Failed',
+        description: 'Could not schedule recurring expenses. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsScheduling(false);
+    }
+  };
+
   const totalMonthly = expenses
     .filter(e => e.isActive)
     .reduce((sum, expense) => sum + expense.amount, 0);
@@ -69,10 +121,22 @@ export default function Recurring({
             Manage your monthly recurring expenses and track payment schedules.
           </p>
         </div>
-        <Button onClick={handleAddNew}>
-          <PlusCircle className="mr-2" />
-          Add Recurring Expense
-        </Button>
+        <div className="flex gap-2">
+          {expenses.filter(e => e.isActive).length > 0 && onScheduleToCashflow && (
+            <Button 
+              onClick={handleScheduleToCashflow} 
+              disabled={isScheduling}
+              variant="outline"
+            >
+              <Sparkles className="mr-2 h-4 w-4" />
+              {isScheduling ? 'Scheduling...' : 'AI Schedule to Cashflow'}
+            </Button>
+          )}
+          <Button onClick={handleAddNew}>
+            <PlusCircle className="mr-2" />
+            Add Recurring Expense
+          </Button>
+        </div>
       </header>
 
       {/* Summary Card */}

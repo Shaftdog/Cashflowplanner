@@ -174,6 +174,10 @@ export default function Home() {
             addExpense={addRecurringExpense}
             updateExpense={updateRecurringExpense}
             deleteExpense={deleteRecurringExpense}
+            onScheduleToCashflow={(items) => {
+              items.forEach(item => addItem(item));
+              setActiveTab('cashflow');
+            }}
           />
         </TabsContent>
       </Tabs>
