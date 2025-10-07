@@ -57,3 +57,12 @@ export const PRIORITY_STYLES: Record<Priority, string> = {
   high: 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border-yellow-500/20',
   critical: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20',
 };
+
+export const FREQUENCIES: ['weekly', 'biweekly', 'monthly', 'quarterly', 'annually'] = ['weekly', 'biweekly', 'monthly', 'quarterly', 'annually'];
+
+export const DAYS_OF_WEEK: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+export const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+] as const;

@@ -95,7 +95,9 @@ export interface Database {
           user_id: string
           description: string
           amount: number
-          day_of_month: number
+          frequency: 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'annually'
+          frequency_config: Json
+          day_of_month: number | null
           priority: 'low' | 'medium' | 'high' | 'critical'
           notes: string | null
           is_active: boolean
@@ -107,7 +109,9 @@ export interface Database {
           user_id: string
           description: string
           amount: number
-          day_of_month: number
+          frequency?: 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'annually'
+          frequency_config?: Json
+          day_of_month?: number | null
           priority: 'low' | 'medium' | 'high' | 'critical'
           notes?: string | null
           is_active?: boolean
@@ -119,7 +123,9 @@ export interface Database {
           user_id?: string
           description?: string
           amount?: number
-          day_of_month?: number
+          frequency?: 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'annually'
+          frequency_config?: Json
+          day_of_month?: number | null
           priority?: 'low' | 'medium' | 'high' | 'critical'
           notes?: string | null
           is_active?: boolean

@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { PRIORITY_STYLES } from '@/lib/constants';
+import { formatFrequency } from '@/lib/utils-helpers';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -203,7 +204,7 @@ export default function Recurring({
         <div>
           <h1 className="text-3xl font-bold text-foreground">Recurring Expenses</h1>
           <p className="text-muted-foreground">
-            Manage your monthly recurring expenses and track payment schedules.
+            Manage your recurring expenses and track payment schedules.
           </p>
         </div>
         <div className="flex gap-2">
@@ -254,7 +255,7 @@ export default function Recurring({
       {/* Summary Card */}
       <Card className="mb-6">
         <CardHeader>
-          <CardTitle>Monthly Summary</CardTitle>
+          <CardTitle>Expense Summary</CardTitle>
           <CardDescription>Total active recurring expenses</CardDescription>
         </CardHeader>
         <CardContent>
@@ -277,7 +278,7 @@ export default function Recurring({
                   <CardDescription className="mt-1">
                     <div className="flex items-center gap-1 text-sm">
                       <Calendar className="h-3 w-3" />
-                      Day {expense.dayOfMonth} of each month
+                      {formatFrequency(expense)}
                     </div>
                   </CardDescription>
                 </div>

@@ -7,13 +7,21 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'zod';
-import { CATEGORY_NAMES, PRIORITIES } from '@/lib/constants';
+import { CATEGORY_NAMES, PRIORITIES, FREQUENCIES } from '@/lib/constants';
+
+const FrequencyConfigSchema = z.object({
+  daysOfWeek: z.array(z.number()).optional(),
+  dayOfMonth: z.number().optional(),
+  month: z.number().optional(),
+});
 
 const RecurringExpenseSchema = z.object({
   id: z.string(),
   description: z.string(),
   amount: z.number(),
-  dayOfMonth: z.number(),
+  frequency: z.enum(FREQUENCIES),
+  frequencyConfig: FrequencyConfigSchema,
+  dayOfMonth: z.number().optional(),
   priority: z.enum(PRIORITIES),
   notes: z.string().optional(),
   isActive: z.boolean(),
@@ -54,7 +62,79 @@ const scheduleRecurringPrompt = ai.definePrompt({
   output: {
     schema: ScheduleRecurringOutputSchema,
   },
-  prompt: `You are an AI assistant helping to schedule recurring expenses into a cashflow planning board.\n\nThe user has the following recurring expenses that need to be scheduled:\n{{#each recurringExpenses}}\n{{#if isActive}}\n- Description: {{description}}, Amount: {{amount}}, Day of Month: {{dayOfMonth}}, Priority: {{priority}}{{#if notes}}, Notes: {{notes}}{{/if}}\n{{/if}}\n{{/each}}\n\nCurrent Date: {{currentDate}}\nTarget Month: {{#if targetMonth}}{{targetMonth}}{{else}}Current Month{{/if}}\n\nThe cashflow board has the following week categories:\n- Week 1: For days 1-7 of the month\n- Week 2: For days 8-14 of the month\n- Week 3: For days 15-21 of the month\n- Week 4: For days 22-28 of the month\n- Week 5: For days 29-31 of the month\n\nYour task:\n1. For each ACTIVE recurring expense, create a payment item\n2. Calculate the actual due date based on the day of month and target month\n3. Assign each payment to the appropriate week category based on which day of the month it falls on\n4. Preserve the description, amount, priority, and notes from the recurring expense\n5. Add a note mentioning this was auto-scheduled from recurring expenses\n\nReturn the scheduled payments as JSON in the following format:\n{\n  "scheduledPayments": [\n    {\n      "description": string,\n      "amount": number,\n      "dueDate": "YYYY-MM-DD" (ISO date string),\n      "category": "Week 1" | "Week 2" | "Week 3" | "Week 4" | "Week 5",\n      "priority": "low" | "medium" | "high" | "critical",\n      "notes": string (include original notes + mention it's from recurring)\n    }\n  ],\n  "summary": "Brief summary of how many expenses were scheduled and to which weeks"\n}\n\nImportant:\n- Only schedule ACTIVE recurring expenses (isActive: true)\n- If a day of month doesn't exist in the target month (e.g., day 31 in February), use the last day of that month\n- Make sure the dueDate is a valid ISO date string for the target month`,
+  prompt: `You are an AI assistant helping to schedule recurring expenses into a cashflow planning board.
+
+The user has the following recurring expenses that need to be scheduled:
+{{#each recurringExpenses}}
+{{#if isActive}}
+- Description: {{description}}, Amount: {{amount}}, Frequency: {{frequency}}, Priority: {{priority}}{{#if notes}}, Notes: {{notes}}{{/if}}
+  {{#if frequencyConfig.daysOfWeek}}Days of Week: {{frequencyConfig.daysOfWeek}}{{/if}}
+  {{#if frequencyConfig.dayOfMonth}}Day of Month: {{frequencyConfig.dayOfMonth}}{{/if}}
+  {{#if frequencyConfig.month}}Month: {{frequencyConfig.month}}{{/if}}
+{{/if}}
+{{/each}}
+
+Current Date: {{currentDate}}
+Target Month: {{#if targetMonth}}{{targetMonth}}{{else}}Current Month{{/if}}
+
+The cashflow board has the following week categories:
+- Week 1: For days 1-7 of the month
+- Week 2: For days 8-14 of the month
+- Week 3: For days 15-21 of the month
+- Week 4: For days 22-28 of the month
+- Week 5: For days 29-31 of the month
+
+FREQUENCY TYPES AND SCHEDULING RULES:
+
+1. WEEKLY: Create a payment for each occurrence on the specified days of week within the target month
+   - frequencyConfig.daysOfWeek contains array of days (0=Sunday, 1=Monday, ..., 6=Saturday)
+   - Example: If daysOfWeek=[1,3] (Mon, Wed), create a payment for each Monday and Wednesday in the month
+   
+2. BIWEEKLY: Create a payment every 2 weeks on the specified days of week
+   - Similar to weekly but only on alternating weeks
+   - Use the first week of the month as reference, then skip every other week
+   
+3. MONTHLY: Create ONE payment for the specified day of the month
+   - frequencyConfig.dayOfMonth specifies which day (1-31)
+   - If day doesn't exist in month (e.g., 31 in Feb), use last day of month
+   
+4. QUARTERLY: Create ONE payment if the target month matches the quarter pattern
+   - frequencyConfig has both dayOfMonth and month
+   - Only create payment if we're in the right quarter (every 3 months from specified month)
+   - Example: If month=1, create payments in Jan, Apr, Jul, Oct
+   
+5. ANNUALLY: Create ONE payment if the target month matches the specified month
+   - Only create payment if target month matches frequencyConfig.month
+
+YOUR TASK:
+1. For each ACTIVE recurring expense, determine what payments to create based on its frequency
+2. Calculate actual due dates (YYYY-MM-DD format) for each occurrence
+3. Assign each payment to the appropriate Week category based on the day of month
+4. Create INDEPENDENT payment items - each can be moved/modified separately later
+5. Preserve description, amount, priority from the recurring expense
+6. Add a note mentioning this was auto-scheduled from recurring expenses (include original notes if any)
+
+Return the scheduled payments as JSON:
+{
+  "scheduledPayments": [
+    {
+      "description": string,
+      "amount": number,
+      "dueDate": "YYYY-MM-DD" (ISO date string),
+      "category": "Week 1" | "Week 2" | "Week 3" | "Week 4" | "Week 5",
+      "priority": "low" | "medium" | "high" | "critical",
+      "notes": string (include original notes + mention it's from recurring)
+    }
+  ],
+  "summary": "Brief summary of how many expenses were scheduled, their frequencies, and to which weeks"
+}
+
+IMPORTANT:
+- Only schedule ACTIVE recurring expenses (isActive: true)
+- Each payment item is independent and can be modified/moved after scheduling
+- Handle edge cases (Feb 30, 31st of 30-day months, etc.)
+- For weekly/biweekly, create separate payment items for each occurrence
+- Make sure all dueDates are valid ISO date strings within the target month`,
 });
 
 const scheduleRecurringFlow = ai.defineFlow(

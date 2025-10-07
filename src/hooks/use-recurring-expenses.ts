@@ -33,7 +33,9 @@ export function useRecurringExpenses(user: User | null) {
           id: expense.id,
           description: expense.description,
           amount: Number(expense.amount),
-          dayOfMonth: expense.day_of_month,
+          frequency: expense.frequency || 'monthly',
+          frequencyConfig: (expense.frequency_config as any) || {},
+          dayOfMonth: expense.day_of_month || undefined,
           priority: expense.priority,
           notes: expense.notes || undefined,
           isActive: expense.is_active,
@@ -73,7 +75,9 @@ export function useRecurringExpenses(user: User | null) {
           user_id: user.id,
           description: expense.description,
           amount: expense.amount,
-          day_of_month: expense.dayOfMonth,
+          frequency: expense.frequency,
+          frequency_config: expense.frequencyConfig as any,
+          day_of_month: expense.dayOfMonth || null,
           priority: expense.priority,
           notes: expense.notes || null,
           is_active: expense.isActive,
@@ -87,7 +91,9 @@ export function useRecurringExpenses(user: User | null) {
         id: data.id,
         description: data.description,
         amount: Number(data.amount),
-        dayOfMonth: data.day_of_month,
+        frequency: data.frequency,
+        frequencyConfig: (data.frequency_config as any) || {},
+        dayOfMonth: data.day_of_month || undefined,
         priority: data.priority,
         notes: data.notes || undefined,
         isActive: data.is_active,
@@ -113,6 +119,8 @@ export function useRecurringExpenses(user: User | null) {
       const updateData: any = {};
       if (updatedExpense.description !== undefined) updateData.description = updatedExpense.description;
       if (updatedExpense.amount !== undefined) updateData.amount = updatedExpense.amount;
+      if (updatedExpense.frequency !== undefined) updateData.frequency = updatedExpense.frequency;
+      if (updatedExpense.frequencyConfig !== undefined) updateData.frequency_config = updatedExpense.frequencyConfig as any;
       if (updatedExpense.dayOfMonth !== undefined) updateData.day_of_month = updatedExpense.dayOfMonth;
       if (updatedExpense.priority !== undefined) updateData.priority = updatedExpense.priority;
       if (updatedExpense.notes !== undefined) updateData.notes = updatedExpense.notes;

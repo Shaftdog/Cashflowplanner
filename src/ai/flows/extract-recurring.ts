@@ -6,13 +6,21 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { PRIORITIES } from '@/lib/constants';
+import { PRIORITIES, FREQUENCIES } from '@/lib/constants';
+
+const FrequencyConfigSchema = z.object({
+  daysOfWeek: z.array(z.number()).optional().describe('Array of day indices (0=Sunday, 6=Saturday) for weekly/biweekly frequencies.'),
+  dayOfMonth: z.number().min(1).max(31).optional().describe('Day of month (1-31) for monthly/quarterly/annually frequencies.'),
+  month: z.number().min(1).max(12).optional().describe('Month (1-12) for quarterly/annually frequencies.'),
+});
 
 const RecurringExpenseItemSchema = z.object({
   id: z.string().optional().describe('Unique identifier for the extracted recurring expense.'),
   description: z.string().describe('The description of the recurring expense.'),
   amount: z.number().describe('The amount of the recurring expense.'),
-  dayOfMonth: z.number().min(1).max(31).describe('The day of the month when this expense is due (1-31).'),
+  frequency: z.enum(FREQUENCIES).describe('How often the expense recurs: weekly, biweekly, monthly, quarterly, or annually.'),
+  frequencyConfig: FrequencyConfigSchema.describe('Configuration specific to the frequency type.'),
+  dayOfMonth: z.number().min(1).max(31).optional().describe('Legacy field for backward compatibility.'),
   priority: z.enum(PRIORITIES).describe('The priority of the expense.'),
   notes: z.string().optional().describe('Any notes for the expense.'),
   isActive: z.boolean().describe('Whether the recurring expense is active.'),
@@ -51,16 +59,30 @@ const extractRecurringPrompt = ai.definePrompt({
   For each recurring expense, determine:
   - Description: What the expense is for
   - Amount: The recurring payment amount
-  - Day of Month: Which day of the month the expense is due (1-31). If a day is mentioned like "15th", use 15. If "beginning of month", use 1. If "end of month", use 28. If not specified, use 1.
+  - Frequency: Determine from keywords:
+    * "weekly", "every week", "per week" → weekly
+    * "bi-weekly", "biweekly", "every two weeks", "every other week" → biweekly
+    * "monthly", "every month", "per month", "each month" → monthly
+    * "quarterly", "every quarter", "every 3 months" → quarterly
+    * "annually", "yearly", "annual", "per year", "each year" → annually
+    * Default to "monthly" if not specified
+  - Frequency Config: Based on the frequency:
+    * Weekly/Biweekly: Extract daysOfWeek as array (0=Sunday, 1=Monday, ..., 6=Saturday)
+      Example: "every Monday and Wednesday" → daysOfWeek: [1, 3]
+    * Monthly: Extract dayOfMonth (1-31)
+      Example: "15th of each month" → dayOfMonth: 15
+    * Quarterly/Annually: Extract both dayOfMonth and month (1-12)
+      Example: "March 15 each year" → dayOfMonth: 15, month: 3
   - Priority: Infer from language ('critical' for essential/urgent, 'high' for important, 'medium' for normal, 'low' for flexible)
   - Notes: Any additional context
   - Is Active: Default to true unless explicitly mentioned as inactive/paused
 
-  Examples of recurring expenses:
-  - "Rent is $1500 due on the 1st of each month"
-  - "Netflix subscription $15.99 monthly on the 20th"
-  - "Car payment of $400 every month on the 15th"
-  - "Utilities average $150, usually charged around the 10th"
+  Examples:
+  - "Rent is $1500 due on the 1st of each month" → frequency: "monthly", frequencyConfig: {dayOfMonth: 1}
+  - "Gym membership $50 weekly every Monday" → frequency: "weekly", frequencyConfig: {daysOfWeek: [1]}
+  - "Trash pickup $30 bi-weekly on Tuesdays" → frequency: "biweekly", frequencyConfig: {daysOfWeek: [2]}
+  - "Car insurance $600 every 6 months in January and July" → frequency: "annually", frequencyConfig: {dayOfMonth: 1, month: 1} (create two separate entries)
+  - "Therapy sessions $120 every Thursday" → frequency: "weekly", frequencyConfig: {daysOfWeek: [4]}
 
   Text to analyze:
   "{{text}}"
@@ -92,16 +114,20 @@ const extractRecurringFlow = ai.defineFlow(
 Extract only RECURRING expenses with the following details:
 - Description of each recurring payment/expense
 - Amount
-- Day of month when it's due (1-31)
+- Frequency: Identify if it's weekly, biweekly, monthly, quarterly, or annually
+- Frequency Config: Based on frequency type:
+  * Weekly/Biweekly: Days of week (0=Sunday through 6=Saturday)
+  * Monthly: Day of month (1-31)
+  * Quarterly/Annually: Day of month and month (1-12)
 - Priority: 'critical' for essential services, 'high' for important, 'medium' for normal, 'low' for optional/flexible
 - Whether it's active (default to true)
 - Any additional notes
 
-Important: Only extract expenses that recur on a regular basis (monthly, yearly, etc.). Skip one-time payments.
+Important: Only extract expenses that recur on a regular basis. Skip one-time payments.
 
 If the image contains text, also consider: ${input.text}
 
-Return the data as a JSON object with an expenses array.`;
+Return the data as a JSON object with an expenses array following the schema.`;
 
       const response = await ai.generate({
         model: 'googleai/gemini-2.0-flash-exp',

@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Check, Trash2, Calendar } from 'lucide-react';
 import { ScrollArea } from '../ui/scroll-area';
 import { PRIORITY_STYLES } from '@/lib/constants';
+import { formatFrequency } from '@/lib/utils-helpers';
 
 type ExtractedRecurringExpense = ExtractRecurringOutput['expenses'][0];
 
@@ -93,7 +94,7 @@ export default function ExtractedRecurring({ expenses, onAdd, onDiscard }: Extra
                   <span>Amount: <span className="font-mono">{formatCurrency(expense.amount)}</span></span>
                   <span className="flex items-center gap-1">
                     <Calendar className="h-3 w-3" />
-                    Day {expense.dayOfMonth} of each month
+                    {formatFrequency({...expense, id: expense.id || '', createdAt: ''})}
                   </span>
                   <span>Priority: <Badge variant="outline" className={PRIORITY_STYLES[expense.priority]}>{expense.priority}</Badge></span>
                   {expense.isActive && <span><Badge variant="outline">Active</Badge></span>}
