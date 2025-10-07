@@ -40,7 +40,8 @@ import { CATEGORIES, PRIORITIES } from '@/lib/constants';
 
 const formSchema = z.object({
   description: z.string().min(1, 'Description is required.'),
-  amount: z.coerce.number().refine(val => val !== 0, 'Amount cannot be zero.'),
+  type: z.enum(['expense', 'revenue'] as const),
+  amount: z.coerce.number().refine(val => val !== 0, 'Amount cannot be zero.').refine(val => val > 0, 'Amount must be positive.'),
   dueDate: z.date({ required_error: 'A due date is required.' }),
   category: z.string().min(1, 'Category is required.'),
   priority: z.enum(PRIORITIES),
@@ -61,6 +62,7 @@ export default function ItemDialog({ isOpen, onOpenChange, onSave, item }: ItemD
     resolver: zodResolver(formSchema),
     defaultValues: {
       description: '',
+      type: 'expense',
       amount: 0,
       dueDate: new Date(),
       category: 'Needs Work',
@@ -73,7 +75,8 @@ export default function ItemDialog({ isOpen, onOpenChange, onSave, item }: ItemD
     if (item) {
       form.reset({
         description: item.description,
-        amount: item.amount,
+        type: item.type || 'expense',
+        amount: Math.abs(item.amount),
         dueDate: new Date(item.dueDate),
         category: item.category,
         priority: item.priority,
@@ -82,6 +85,7 @@ export default function ItemDialog({ isOpen, onOpenChange, onSave, item }: ItemD
     } else {
       form.reset({
         description: '',
+        type: 'expense',
         amount: 0,
         dueDate: new Date(),
         category: 'Needs Work',
@@ -96,6 +100,7 @@ export default function ItemDialog({ isOpen, onOpenChange, onSave, item }: ItemD
       ...item,
       id: item?.id || '',
       ...values,
+      amount: Math.abs(values.amount),
       dueDate: values.dueDate.toISOString(),
       category: values.category as CategoryName,
       createdAt: item?.createdAt || '',
@@ -124,6 +129,27 @@ export default function ItemDialog({ isOpen, onOpenChange, onSave, item }: ItemD
                   <FormControl>
                     <Input placeholder="e.g., Office Rent" {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Type</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="expense">Expense</SelectItem>
+                      <SelectItem value="revenue">Revenue</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

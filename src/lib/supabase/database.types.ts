@@ -15,6 +15,7 @@ export interface Database {
           user_id: string
           description: string
           amount: number
+          type: 'expense' | 'revenue'
           due_date: string
           category: string
           priority: 'low' | 'medium' | 'high' | 'critical'
@@ -27,6 +28,7 @@ export interface Database {
           user_id: string
           description: string
           amount: number
+          type?: 'expense' | 'revenue'
           due_date: string
           category: string
           priority: 'low' | 'medium' | 'high' | 'critical'
@@ -39,6 +41,7 @@ export interface Database {
           user_id?: string
           description?: string
           amount?: number
+          type?: 'expense' | 'revenue'
           due_date?: string
           category?: string
           priority?: 'low' | 'medium' | 'high' | 'critical'
@@ -95,6 +98,7 @@ export interface Database {
           user_id: string
           description: string
           amount: number
+          type: 'expense' | 'revenue'
           frequency: 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'annually'
           frequency_config: Json
           day_of_month: number | null
@@ -109,6 +113,7 @@ export interface Database {
           user_id: string
           description: string
           amount: number
+          type?: 'expense' | 'revenue'
           frequency?: 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'annually'
           frequency_config?: Json
           day_of_month?: number | null
@@ -123,6 +128,7 @@ export interface Database {
           user_id?: string
           description?: string
           amount?: number
+          type?: 'expense' | 'revenue'
           frequency?: 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'annually'
           frequency_config?: Json
           day_of_month?: number | null

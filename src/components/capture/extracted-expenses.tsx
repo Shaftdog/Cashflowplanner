@@ -22,7 +22,7 @@ const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
-  }).format(value);
+  }).format(Math.abs(value));
 };
 
 export default function ExtractedExpenses({ expenses, onAdd, onDiscard }: ExtractedExpensesProps) {
@@ -91,6 +91,9 @@ export default function ExtractedExpenses({ expenses, onAdd, onDiscard }: Extrac
                 <p className="font-semibold">{expense.description}</p>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground mt-1">
                   <span>Amount: <span className="font-mono">{formatCurrency(expense.amount)}</span></span>
+                  <span>Type: <Badge variant="outline" className={expense.type === 'revenue' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}>
+                    {expense.type === 'revenue' ? 'Revenue' : 'Expense'}
+                  </Badge></span>
                   <span>Due: <span className="font-mono">{format(new Date(expense.dueDate), 'MMM dd, yyyy')}</span></span>
                   <span>Category: <Badge variant="outline">{expense.category}</Badge></span>
                   <span>Priority: <Badge variant="outline">{expense.priority}</Badge></span>

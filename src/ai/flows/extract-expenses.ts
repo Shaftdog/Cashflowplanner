@@ -15,7 +15,8 @@ import { CATEGORY_NAMES, PRIORITIES } from '@/lib/constants';
 const PaymentItemSchema = z.object({
   id: z.string().optional().describe('Unique identifier for the extracted expense.'),
   description: z.string().describe('The description of the payment.'),
-  amount: z.number().describe('The amount of the payment. Negative for income, positive for expenses.'),
+  amount: z.number().describe('The amount of the payment. Always positive.'),
+  type: z.enum(['expense', 'revenue']).describe('The type of transaction: expense for money going out, revenue for money coming in.'),
   dueDate: z.string().describe('The due date of the payment in ISO 8601 format.'),
   category: z.enum(CATEGORY_NAMES).describe('The category of the payment.'),
   priority: z.enum(PRIORITIES).describe('The priority of the payment.'),
@@ -56,7 +57,9 @@ const extractExpensesPrompt = ai.definePrompt({
 
   For the due date, if a specific date is mentioned, use it. If the user says "next friday", calculate the date. If no date is mentioned, use today's date.
 
-  For the amount, if the user doesn't specify an amount, default to 0.
+  For the amount, if the user doesn't specify an amount, default to 0. IMPORTANT: Always use positive values for amounts.
+
+  For the type, determine if this is an 'expense' (money going out) or 'revenue' (money coming in, income, sales, etc.). Default to 'expense' unless clearly stated as income or revenue.
 
   For priority, infer from the user's language. If they say something is "urgent" or "important", use 'high' or 'critical'. Otherwise, 'medium' is a safe default.
 
@@ -92,7 +95,8 @@ const extractExpensesFlow = ai.defineFlow(
       
 Extract structured expense data with the following details:
 - Description of each payment/expense
-- Amount (default to 0 if not visible)
+- Amount (default to 0 if not visible, always positive)
+- Type: 'expense' for money going out, 'revenue' for money coming in (income, sales, etc.)
 - Due date (use today's date if not specified)
 - Category: Use 'Current Week' for bills due soon, 'Next Week' for later bills, 'Needs Work' for unclear items, 'Recurring' if it appears to be a recurring payment
 - Priority: 'critical' for urgent/overdue, 'high' for important, 'medium' for normal, 'low' for flexible
@@ -122,11 +126,13 @@ Return the data as a JSON object with an expenses array.`;
       result = promptResult.output;
     }
     
-    // Add unique IDs to extracted expenses if not present
+    // Add unique IDs and ensure amounts are positive
     if (result && result.expenses) {
       result.expenses = result.expenses.map(expense => ({
         ...expense,
         id: expense.id || crypto.randomUUID(),
+        amount: Math.abs(expense.amount),
+        type: expense.type || 'expense',
       }));
     }
     

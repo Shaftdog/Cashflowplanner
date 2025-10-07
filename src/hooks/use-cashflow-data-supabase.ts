@@ -55,6 +55,7 @@ export function useCashflowDataSupabase() {
           id: item.id,
           description: item.description,
           amount: Number(item.amount),
+          type: item.type || 'expense',
           dueDate: item.due_date,
           category: item.category as any,
           priority: item.priority,
@@ -135,6 +136,7 @@ export function useCashflowDataSupabase() {
           user_id: user.id,
           description: item.description,
           amount: item.amount,
+          type: item.type || 'expense',
           due_date: item.dueDate,
           category: item.category,
           priority: item.priority,
@@ -149,6 +151,7 @@ export function useCashflowDataSupabase() {
         id: data.id,
         description: data.description,
         amount: Number(data.amount),
+        type: data.type || 'expense',
         dueDate: data.due_date,
         category: data.category as any,
         priority: data.priority,
@@ -175,6 +178,7 @@ export function useCashflowDataSupabase() {
       const updateData: any = {};
       if (updatedItem.description !== undefined) updateData.description = updatedItem.description;
       if (updatedItem.amount !== undefined) updateData.amount = updatedItem.amount;
+      if (updatedItem.type !== undefined) updateData.type = updatedItem.type;
       if (updatedItem.dueDate !== undefined) updateData.due_date = updatedItem.dueDate;
       if (updatedItem.category !== undefined) updateData.category = updatedItem.category;
       if (updatedItem.priority !== undefined) updateData.priority = updatedItem.priority;

@@ -4,6 +4,8 @@ export type Priority = 'low' | 'medium' | 'high' | 'critical';
 
 export type CategoryName = (typeof CATEGORY_NAMES)[number];
 
+export type ItemType = 'expense' | 'revenue';
+
 export type Frequency = 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'annually';
 
 export interface FrequencyConfig {
@@ -16,6 +18,7 @@ export interface PaymentItem {
   id: string;
   description: string;
   amount: number;
+  type: ItemType;
   dueDate: string;
   category: CategoryName;
   priority: Priority;
@@ -34,6 +37,7 @@ export interface RecurringExpense {
   id: string;
   description: string;
   amount: number;
+  type: ItemType;
   frequency: Frequency;
   frequencyConfig: FrequencyConfig;
   dayOfMonth?: number; // Kept for backward compatibility

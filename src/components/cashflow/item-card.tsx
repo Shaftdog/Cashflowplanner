@@ -22,7 +22,7 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { MoreVertical, Edit, Trash2, AlertTriangle, CalendarIcon, DollarSign, GripVertical } from 'lucide-react';
+import { MoreVertical, Edit, Trash2, AlertTriangle, CalendarIcon, TrendingUp, TrendingDown, GripVertical } from 'lucide-react';
 import { PRIORITY_STYLES } from '@/lib/constants';
 import { format } from 'date-fns';
 import { useSortable } from '@dnd-kit/sortable';
@@ -36,12 +36,10 @@ interface ItemCardProps {
 }
 
 const formatCurrency = (value: number) => {
-  const isNegative = value < 0;
-  const formatted = new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
   }).format(Math.abs(value));
-  return isNegative ? `+${formatted}` : formatted;
 };
 
 export default function ItemCard({ item, onEdit, onDelete, isDragging }: ItemCardProps) {
@@ -60,7 +58,7 @@ export default function ItemCard({ item, onEdit, onDelete, isDragging }: ItemCar
     opacity: isSortableDragging ? 0.5 : 1,
   };
 
-  const isIncome = item.amount < 0;
+  const isRevenue = item.type === 'revenue';
 
   // Handle click on the card itself for editing
   const handleCardClick = (e: React.MouseEvent) => {
@@ -93,10 +91,15 @@ export default function ItemCard({ item, onEdit, onDelete, isDragging }: ItemCar
           </div>
           
           <div className="flex-1 min-w-0 space-y-2 ml-8">
-            <p className="font-semibold text-foreground truncate break-words">{item.description}</p>
+            <div className="flex items-center gap-2">
+              <p className="font-semibold text-foreground truncate break-words">{item.description}</p>
+              <Badge variant="outline" className={isRevenue ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}>
+                {isRevenue ? 'Revenue' : 'Expense'}
+              </Badge>
+            </div>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
-              <span className={`flex items-center font-bold ${isIncome ? 'text-green-500' : 'text-red-500'}`}>
-                <DollarSign className="mr-1 h-4 w-4" />
+              <span className={`flex items-center font-bold ${isRevenue ? 'text-green-600' : 'text-red-600'}`}>
+                {isRevenue ? <TrendingUp className="mr-1 h-4 w-4" /> : <TrendingDown className="mr-1 h-4 w-4" />}
                 {formatCurrency(item.amount)}
               </span>
               <span className="flex items-center">

@@ -74,8 +74,6 @@ export default function Cashflow({
     setIsDialogOpen(true);
   }
 
-  const totalExpenses = items.reduce((sum, item) => sum + item.amount, 0);
-
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
   };
@@ -124,7 +122,7 @@ export default function Cashflow({
       <FinancialOverview
         financials={financials}
         setFinancials={setFinancials}
-        totalExpenses={totalExpenses}
+        items={items}
       />
 
       <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">

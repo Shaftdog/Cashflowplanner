@@ -19,6 +19,7 @@ const RecurringExpenseSchema = z.object({
   id: z.string(),
   description: z.string(),
   amount: z.number(),
+  type: z.enum(['expense', 'revenue']).optional(),
   frequency: z.enum(FREQUENCIES),
   frequencyConfig: FrequencyConfigSchema,
   dayOfMonth: z.number().optional(),
@@ -37,6 +38,7 @@ export type ScheduleRecurringInput = z.infer<typeof ScheduleRecurringInputSchema
 const ScheduledPaymentSchema = z.object({
   description: z.string(),
   amount: z.number(),
+  type: z.enum(['expense', 'revenue']),
   dueDate: z.string().describe('ISO date string for when this payment is due'),
   category: z.enum(CATEGORY_NAMES),
   priority: z.enum(PRIORITIES),
@@ -67,7 +69,7 @@ const scheduleRecurringPrompt = ai.definePrompt({
 The user has the following recurring expenses that need to be scheduled:
 {{#each recurringExpenses}}
 {{#if isActive}}
-- Description: {{description}}, Amount: {{amount}}, Frequency: {{frequency}}, Priority: {{priority}}{{#if notes}}, Notes: {{notes}}{{/if}}
+- Description: {{description}}, Amount: {{amount}}, Type: {{type}}, Frequency: {{frequency}}, Priority: {{priority}}{{#if notes}}, Notes: {{notes}}{{/if}}
   {{#if frequencyConfig.daysOfWeek}}Days of Week: {{frequencyConfig.daysOfWeek}}{{/if}}
   {{#if frequencyConfig.dayOfMonth}}Day of Month: {{frequencyConfig.dayOfMonth}}{{/if}}
   {{#if frequencyConfig.month}}Month: {{frequencyConfig.month}}{{/if}}
@@ -111,7 +113,7 @@ YOUR TASK:
 2. Calculate actual due dates (YYYY-MM-DD format) for each occurrence
 3. Assign each payment to the appropriate Week category based on the day of month
 4. Create INDEPENDENT payment items - each can be moved/modified separately later
-5. Preserve description, amount, priority from the recurring expense
+5. Preserve description, amount, type, and priority from the recurring expense
 6. Add a note mentioning this was auto-scheduled from recurring expenses (include original notes if any)
 
 Return the scheduled payments as JSON:
@@ -120,6 +122,7 @@ Return the scheduled payments as JSON:
     {
       "description": string,
       "amount": number,
+      "type": "expense" | "revenue",
       "dueDate": "YYYY-MM-DD" (ISO date string),
       "category": "Week 1" | "Week 2" | "Week 3" | "Week 4" | "Week 5",
       "priority": "low" | "medium" | "high" | "critical",

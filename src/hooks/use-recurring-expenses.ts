@@ -33,6 +33,7 @@ export function useRecurringExpenses(user: User | null) {
           id: expense.id,
           description: expense.description,
           amount: Number(expense.amount),
+          type: expense.type || 'expense',
           frequency: expense.frequency || 'monthly',
           frequencyConfig: (expense.frequency_config as any) || {},
           dayOfMonth: expense.day_of_month || undefined,
@@ -75,6 +76,7 @@ export function useRecurringExpenses(user: User | null) {
           user_id: user.id,
           description: expense.description,
           amount: expense.amount,
+          type: expense.type || 'expense',
           frequency: expense.frequency,
           frequency_config: expense.frequencyConfig as any,
           day_of_month: expense.dayOfMonth || null,
@@ -91,6 +93,7 @@ export function useRecurringExpenses(user: User | null) {
         id: data.id,
         description: data.description,
         amount: Number(data.amount),
+        type: data.type || 'expense',
         frequency: data.frequency,
         frequencyConfig: (data.frequency_config as any) || {},
         dayOfMonth: data.day_of_month || undefined,
@@ -119,6 +122,7 @@ export function useRecurringExpenses(user: User | null) {
       const updateData: any = {};
       if (updatedExpense.description !== undefined) updateData.description = updatedExpense.description;
       if (updatedExpense.amount !== undefined) updateData.amount = updatedExpense.amount;
+      if (updatedExpense.type !== undefined) updateData.type = updatedExpense.type;
       if (updatedExpense.frequency !== undefined) updateData.frequency = updatedExpense.frequency;
       if (updatedExpense.frequencyConfig !== undefined) updateData.frequency_config = updatedExpense.frequencyConfig as any;
       if (updatedExpense.dayOfMonth !== undefined) updateData.day_of_month = updatedExpense.dayOfMonth;

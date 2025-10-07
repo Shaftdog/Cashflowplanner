@@ -37,7 +37,8 @@ import { PRIORITIES, FREQUENCIES, DAYS_OF_WEEK, MONTHS } from '@/lib/constants';
 
 const formSchema = z.object({
   description: z.string().min(1, 'Description is required.'),
-  amount: z.coerce.number().refine(val => val !== 0, 'Amount cannot be zero.'),
+  type: z.enum(['expense', 'revenue'] as const),
+  amount: z.coerce.number().refine(val => val !== 0, 'Amount cannot be zero.').refine(val => val > 0, 'Amount must be positive.'),
   frequency: z.enum(FREQUENCIES),
   daysOfWeek: z.array(z.number()).optional(),
   dayOfMonth: z.coerce.number().min(1).max(31).optional(),
@@ -95,6 +96,7 @@ export default function RecurringDialog({ isOpen, onOpenChange, onSave, expense 
     resolver: zodResolver(formSchema),
     defaultValues: {
       description: '',
+      type: 'expense',
       amount: 0,
       frequency: 'monthly',
       daysOfWeek: [],
@@ -112,7 +114,8 @@ export default function RecurringDialog({ isOpen, onOpenChange, onSave, expense 
     if (expense) {
       form.reset({
         description: expense.description,
-        amount: expense.amount,
+        type: expense.type || 'expense',
+        amount: Math.abs(expense.amount),
         frequency: expense.frequency,
         daysOfWeek: expense.frequencyConfig.daysOfWeek || [],
         dayOfMonth: expense.frequencyConfig.dayOfMonth || expense.dayOfMonth || 1,
@@ -124,6 +127,7 @@ export default function RecurringDialog({ isOpen, onOpenChange, onSave, expense 
     } else {
       form.reset({
         description: '',
+        type: 'expense',
         amount: 0,
         frequency: 'monthly',
         daysOfWeek: [],
@@ -153,7 +157,8 @@ export default function RecurringDialog({ isOpen, onOpenChange, onSave, expense 
       ...expense,
       id: expense?.id || '',
       description: values.description,
-      amount: values.amount,
+      type: values.type,
+      amount: Math.abs(values.amount),
       frequency: values.frequency,
       frequencyConfig,
       dayOfMonth: values.frequency === 'monthly' ? values.dayOfMonth : undefined,
@@ -186,6 +191,27 @@ export default function RecurringDialog({ isOpen, onOpenChange, onSave, expense 
                   <FormControl>
                     <Input placeholder="e.g., Rent Payment" {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Type</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="expense">Expense</SelectItem>
+                      <SelectItem value="revenue">Revenue</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

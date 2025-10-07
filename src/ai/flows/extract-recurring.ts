@@ -17,7 +17,8 @@ const FrequencyConfigSchema = z.object({
 const RecurringExpenseItemSchema = z.object({
   id: z.string().optional().describe('Unique identifier for the extracted recurring expense.'),
   description: z.string().describe('The description of the recurring expense.'),
-  amount: z.number().describe('The amount of the recurring expense.'),
+  amount: z.number().describe('The amount of the recurring expense. Always positive.'),
+  type: z.enum(['expense', 'revenue']).describe('The type: expense for money going out, revenue for recurring income.'),
   frequency: z.enum(FREQUENCIES).describe('How often the expense recurs: weekly, biweekly, monthly, quarterly, or annually.'),
   frequencyConfig: FrequencyConfigSchema.describe('Configuration specific to the frequency type.'),
   dayOfMonth: z.number().min(1).max(31).optional().describe('Legacy field for backward compatibility.'),
@@ -58,7 +59,8 @@ const extractRecurringPrompt = ai.definePrompt({
 
   For each recurring expense, determine:
   - Description: What the expense is for
-  - Amount: The recurring payment amount
+  - Amount: The recurring payment amount (always positive)
+  - Type: 'expense' for recurring bills/costs, 'revenue' for recurring income/sales (default to 'expense')
   - Frequency: Determine from keywords:
     * "weekly", "every week", "per week" → weekly
     * "bi-weekly", "biweekly", "every two weeks", "every other week" → biweekly
@@ -113,7 +115,8 @@ const extractRecurringFlow = ai.defineFlow(
       
 Extract only RECURRING expenses with the following details:
 - Description of each recurring payment/expense
-- Amount
+- Amount (always positive)
+- Type: 'expense' for recurring bills/costs, 'revenue' for recurring income (default to 'expense')
 - Frequency: Identify if it's weekly, biweekly, monthly, quarterly, or annually
 - Frequency Config: Based on frequency type:
   * Weekly/Biweekly: Days of week (0=Sunday through 6=Saturday)
@@ -148,11 +151,13 @@ Return the data as a JSON object with an expenses array following the schema.`;
       result = promptResult.output;
     }
     
-    // Add unique IDs to extracted expenses if not present
+    // Add unique IDs, ensure amounts are positive, and set defaults
     if (result && result.expenses) {
       result.expenses = result.expenses.map(expense => ({
         ...expense,
         id: expense.id || crypto.randomUUID(),
+        amount: Math.abs(expense.amount),
+        type: expense.type || 'expense',
         isActive: expense.isActive ?? true, // Default to active if not specified
       }));
     }
