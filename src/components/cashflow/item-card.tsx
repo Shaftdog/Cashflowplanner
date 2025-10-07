@@ -92,8 +92,8 @@ export default function ItemCard({ item, onEdit, onDelete, isDragging }: ItemCar
             <GripVertical className="h-4 w-4 text-muted-foreground" />
           </div>
           
-          <div className="flex-1 space-y-2 ml-8">
-            <p className="font-semibold text-foreground">{item.description}</p>
+          <div className="flex-1 min-w-0 space-y-2 ml-8">
+            <p className="font-semibold text-foreground truncate break-words">{item.description}</p>
             <div className="flex items-center gap-4 text-sm text-muted-foreground">
               <span className={`flex items-center font-bold ${isIncome ? 'text-green-500' : 'text-red-500'}`}>
                 <DollarSign className="mr-1 h-4 w-4" />
@@ -105,7 +105,7 @@ export default function ItemCard({ item, onEdit, onDelete, isDragging }: ItemCar
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <Badge variant="outline" className={PRIORITY_STYLES[item.priority]}>
               <AlertTriangle className="mr-1 h-3 w-3" />
               {item.priority}
