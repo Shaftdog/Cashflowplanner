@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Download, Upload, MoreVertical } from 'lucide-react';
 import { AuthButton } from '@/components/auth/auth-button';
+import { useToast } from '@/hooks/use-toast';
 
 export default function Home() {
   const {
@@ -44,6 +45,7 @@ export default function Home() {
   const [editingItem, setEditingItem] = useState<PaymentItem | null>(null);
   const [activeTab, setActiveTab] = useState('capture');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
 
   // Handle sidebar tab switching
   useEffect(() => {
@@ -174,9 +176,33 @@ export default function Home() {
             addExpense={addRecurringExpense}
             updateExpense={updateRecurringExpense}
             deleteExpense={deleteRecurringExpense}
-            onScheduleToCashflow={(items) => {
-              items.forEach(item => addItem(item));
+            onScheduleToCashflow={(newItems) => {
+              // Check for duplicates by matching description + dueDate + amount
+              let addedCount = 0;
+              
+              newItems.forEach(newItem => {
+                const isDuplicate = items.some(existingItem => 
+                  existingItem.description === newItem.description &&
+                  existingItem.dueDate === newItem.dueDate &&
+                  existingItem.amount === newItem.amount
+                );
+                
+                if (!isDuplicate) {
+                  addItem(newItem);
+                  addedCount++;
+                }
+              });
+              
               setActiveTab('cashflow');
+              
+              // Show toast with info about skipped duplicates
+              if (addedCount < newItems.length) {
+                const skipped = newItems.length - addedCount;
+                toast({
+                  title: 'Scheduled with duplicates skipped',
+                  description: `Added ${addedCount} item${addedCount !== 1 ? 's' : ''}, skipped ${skipped} duplicate${skipped !== 1 ? 's' : ''}.`,
+                });
+              }
             }}
           />
         </TabsContent>
