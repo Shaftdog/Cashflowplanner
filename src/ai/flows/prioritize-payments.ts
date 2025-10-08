@@ -22,6 +22,9 @@ const PaymentItemSchema = z.object({
   priority: z.enum(PRIORITIES),
   notes: z.string().optional(),
   createdAt: z.string(),
+  isPaid: z.boolean(),
+  paidDate: z.string().optional(),
+  recurringExpenseId: z.string().optional(),
 });
 
 const PrioritizePaymentsInputSchema = z.object({
