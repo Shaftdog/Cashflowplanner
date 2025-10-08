@@ -176,6 +176,7 @@ export default function Recurring({
         category: payment.category,
         priority: payment.priority,
         notes: payment.notes,
+        isPaid: false,
       }));
 
       // Add all items to cashflow

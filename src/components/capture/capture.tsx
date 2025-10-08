@@ -71,7 +71,7 @@ export default function Capture({ onAddItems }: CaptureProps) {
   };
   
   const handleAddSelected = (selectedItems: typeof extractedExpenses) => {
-    onAddItems(selectedItems.map(({isRecurring, id, ...item}) => ({...item, category: isRecurring ? 'Recurring' : item.category})));
+    onAddItems(selectedItems.map(({isRecurring, id, ...item}) => ({...item, category: isRecurring ? 'Recurring' : item.category, isPaid: false})));
     setExtractedExpenses(prev => prev.filter(exp => !selectedItems.some(item => item.id === exp.id)));
     toast({
         title: 'Expenses Added',
