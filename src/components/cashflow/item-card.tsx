@@ -22,7 +22,8 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
-import { MoreVertical, Edit, Trash2, AlertTriangle, CalendarIcon, TrendingUp, TrendingDown, GripVertical } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { MoreVertical, Edit, Trash2, AlertTriangle, CalendarIcon, TrendingUp, TrendingDown, GripVertical, CheckCircle2 } from 'lucide-react';
 import { PRIORITY_STYLES } from '@/lib/constants';
 import { format } from 'date-fns';
 import { useSortable } from '@dnd-kit/sortable';
@@ -32,6 +33,7 @@ interface ItemCardProps {
   item: PaymentItem;
   onEdit: (item: PaymentItem) => void;
   onDelete: (id: string) => void;
+  onMarkPaid?: (id: string) => void;
   isDragging?: boolean;
 }
 
@@ -42,7 +44,7 @@ const formatCurrency = (value: number) => {
   }).format(Math.abs(value));
 };
 
-export default function ItemCard({ item, onEdit, onDelete, isDragging }: ItemCardProps) {
+export default function ItemCard({ item, onEdit, onDelete, onMarkPaid, isDragging }: ItemCardProps) {
   const {
     attributes,
     listeners,
@@ -62,20 +64,33 @@ export default function ItemCard({ item, onEdit, onDelete, isDragging }: ItemCar
 
   // Handle click on the card itself for editing
   const handleCardClick = (e: React.MouseEvent) => {
-    // Don't trigger edit if clicking on the dropdown menu or drag handle
+    // Don't trigger edit if clicking on the dropdown menu, drag handle, or checkbox
     if (
       e.target instanceof HTMLElement &&
-      (e.target.closest('[data-dropdown]') || e.target.closest('[data-drag-handle]'))
+      (e.target.closest('[data-dropdown]') || 
+       e.target.closest('[data-drag-handle]') || 
+       e.target.closest('[data-checkbox]'))
     ) {
       return;
     }
     onEdit(item);
   };
+
+  // Handle checkbox change
+  const handleCheckboxChange = (checked: boolean) => {
+    if (onMarkPaid) {
+      onMarkPaid(item.id);
+    }
+  };
+
+  // Calculate if item is overdue
+  const isOverdue = !item.isPaid && new Date(item.dueDate) < new Date();
+  const daysOverdue = isOverdue ? Math.floor((new Date().getTime() - new Date(item.dueDate).getTime()) / (1000 * 60 * 60 * 24)) : 0;
   return (
     <Card 
       ref={setNodeRef}
       style={style}
-      className="shadow-sm transition-all hover:shadow-md cursor-pointer relative"
+      className={`shadow-sm transition-all hover:shadow-md cursor-pointer relative ${item.isPaid ? 'opacity-60' : ''}`}
       onClick={handleCardClick}
     >
       <CardContent className="p-4">
@@ -92,7 +107,25 @@ export default function ItemCard({ item, onEdit, onDelete, isDragging }: ItemCar
           
           <div className="flex-1 min-w-0 space-y-2 ml-8">
             <div className="flex items-center gap-2">
-              <p className="font-semibold text-foreground truncate break-words">{item.description}</p>
+              {/* Checkbox for marking as paid */}
+              {onMarkPaid && (
+                <div data-checkbox onClick={(e) => e.stopPropagation()}>
+                  <Checkbox 
+                    checked={item.isPaid} 
+                    onCheckedChange={handleCheckboxChange}
+                    className="h-5 w-5"
+                  />
+                </div>
+              )}
+              <p className={`font-semibold text-foreground truncate break-words ${item.isPaid ? 'line-through' : ''}`}>
+                {item.description}
+              </p>
+              {item.isPaid && (
+                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                  <CheckCircle2 className="mr-1 h-3 w-3" />
+                  Paid
+                </Badge>
+              )}
               <Badge variant="outline" className={isRevenue ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}>
                 {isRevenue ? 'Revenue' : 'Expense'}
               </Badge>
@@ -106,6 +139,16 @@ export default function ItemCard({ item, onEdit, onDelete, isDragging }: ItemCar
                  <CalendarIcon className="mr-1 h-4 w-4" />
                 {format(new Date(item.dueDate), 'MMM dd, yyyy')}
               </span>
+              {isOverdue && (
+                <Badge variant="destructive" className="text-xs">
+                  {daysOverdue} day{daysOverdue !== 1 ? 's' : ''} overdue
+                </Badge>
+              )}
+              {item.isPaid && item.paidDate && (
+                <span className="text-xs text-muted-foreground">
+                  Paid: {format(new Date(item.paidDate), 'MMM dd')}
+                </span>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">

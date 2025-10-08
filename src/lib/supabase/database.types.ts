@@ -22,6 +22,9 @@ export interface Database {
           notes: string | null
           created_at: string
           updated_at: string
+          is_paid: boolean
+          paid_date: string | null
+          recurring_expense_id: string | null
         }
         Insert: {
           id?: string
@@ -35,6 +38,9 @@ export interface Database {
           notes?: string | null
           created_at?: string
           updated_at?: string
+          is_paid?: boolean
+          paid_date?: string | null
+          recurring_expense_id?: string | null
         }
         Update: {
           id?: string
@@ -48,6 +54,9 @@ export interface Database {
           notes?: string | null
           created_at?: string
           updated_at?: string
+          is_paid?: boolean
+          paid_date?: string | null
+          recurring_expense_id?: string | null
         }
         Relationships: [
           {

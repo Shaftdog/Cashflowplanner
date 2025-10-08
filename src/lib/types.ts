@@ -24,6 +24,9 @@ export interface PaymentItem {
   priority: Priority;
   notes?: string;
   createdAt: string;
+  isPaid: boolean;
+  paidDate?: string;
+  recurringExpenseId?: string;
 }
 
 export interface CategoryConfig {

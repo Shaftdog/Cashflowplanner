@@ -9,6 +9,7 @@ import FinancialOverview from '@/components/cashflow/financial-overview';
 import CategoryColumn from '@/components/cashflow/category-column';
 import ItemDialog from '@/components/cashflow/item-dialog';
 import ItemCard from '@/components/cashflow/item-card';
+import PaidSection from '@/components/cashflow/paid-section';
 import {
   DndContext,
   closestCenter,
@@ -32,6 +33,8 @@ interface CashflowProps {
   addItem: (item: Omit<PaymentItem, 'id' | 'createdAt'>) => void;
   updateItem: (id: string, item: Partial<PaymentItem>) => void;
   deleteItem: (id: string) => void;
+  markAsPaid?: (id: string) => void;
+  unmarkAsPaid?: (id: string) => void;
   editingItem: PaymentItem | null;
   setEditingItem: (item: PaymentItem | null) => void;
   onEditItem: (item: PaymentItem) => void;
@@ -45,6 +48,8 @@ export default function Cashflow({
   addItem,
   updateItem,
   deleteItem,
+  markAsPaid,
+  unmarkAsPaid,
   editingItem,
   setEditingItem,
   onEditItem,
@@ -87,17 +92,38 @@ export default function Cashflow({
     }
 
     const activeItem = items.find(item => item.id === active.id);
+    
+    // Handle drop on paid section
+    if (over.id === 'paid-section') {
+      if (activeItem && !activeItem.isPaid && markAsPaid) {
+        markAsPaid(activeItem.id);
+      }
+      setActiveId(null);
+      return;
+    }
+
     const newCategory = over.id as CategoryName;
 
-    if (activeItem && activeItem.category !== newCategory) {
-      // Update the item's category
-      updateItem(activeItem.id, { category: newCategory });
+    if (activeItem) {
+      // If dragging from paid section to a category, unmark as paid
+      if (activeItem.isPaid && unmarkAsPaid) {
+        unmarkAsPaid(activeItem.id);
+      }
+      
+      // Update the item's category if changed
+      if (activeItem.category !== newCategory) {
+        updateItem(activeItem.id, { category: newCategory });
+      }
     }
 
     setActiveId(null);
   };
 
   const activeItem = activeId ? items.find(item => item.id === activeId) : null;
+
+  // Separate paid and unpaid items
+  const unpaidItems = items.filter(item => !item.isPaid);
+  const paidItems = items.filter(item => item.isPaid);
 
   return (
     <DndContext
@@ -122,7 +148,7 @@ export default function Cashflow({
       <FinancialOverview
         financials={financials}
         setFinancials={setFinancials}
-        items={items}
+        items={unpaidItems}
       />
 
       <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
@@ -130,14 +156,25 @@ export default function Cashflow({
           <CategoryColumn
             key={category.id}
             category={category}
-            items={items.filter(item => item.category === category.id)}
+            items={unpaidItems.filter(item => item.category === category.id)}
             onEditItem={handleEdit}
             onDeleteItem={deleteItem}
+            onMarkPaid={markAsPaid}
             financials={financials}
             addItem={addItem}
           />
         ))}
       </div>
+
+      {/* Paid Section */}
+      {(paidItems.length > 0 || markAsPaid) && (
+        <PaidSection
+          items={paidItems}
+          onEditItem={handleEdit}
+          onDeleteItem={deleteItem}
+          onUnmarkPaid={unmarkAsPaid || (() => {})}
+        />
+      )}
 
       {/* Drag overlay - shows the item being dragged */}
       <DragOverlay>

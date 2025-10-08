@@ -104,6 +104,9 @@ export default function ItemDialog({ isOpen, onOpenChange, onSave, item }: ItemD
       dueDate: values.dueDate.toISOString(),
       category: values.category as CategoryName,
       createdAt: item?.createdAt || '',
+      isPaid: item?.isPaid || false,
+      paidDate: item?.paidDate,
+      recurringExpenseId: item?.recurringExpenseId,
     };
     onSave(savedItem);
     onOpenChange(false);

@@ -28,6 +28,8 @@ export default function Home() {
     addItem,
     updateItem,
     deleteItem,
+    markAsPaid,
+    unmarkAsPaid,
     isLoaded,
     exportData,
     importData,
@@ -190,6 +192,8 @@ export default function Home() {
             addItem={addItem}
             updateItem={updateItem}
             deleteItem={deleteItem}
+            markAsPaid={markAsPaid}
+            unmarkAsPaid={unmarkAsPaid}
             editingItem={editingItem}
             setEditingItem={setEditingItem}
             onEditItem={handleEditItem}

@@ -21,6 +21,7 @@ interface CategoryColumnProps {
   items: PaymentItem[];
   onEditItem: (item: PaymentItem) => void;
   onDeleteItem: (id: string) => void;
+  onMarkPaid?: (id: string) => void;
   financials: {
     availableFunds: number;
     savingsReserve: number;
@@ -33,6 +34,7 @@ export default function CategoryColumn({
   items,
   onEditItem,
   onDeleteItem,
+  onMarkPaid,
   financials,
   addItem
 }: CategoryColumnProps) {
@@ -142,6 +144,7 @@ export default function CategoryColumn({
                       item={item}
                       onEdit={onEditItem}
                       onDelete={onDeleteItem}
+                      onMarkPaid={onMarkPaid}
                     />
                   ))}
                 </SortableContext>
