@@ -169,6 +169,7 @@ export default function Recurring({
       const paymentItems = result.scheduledPayments.map(payment => ({
         description: payment.description,
         amount: payment.amount,
+        type: payment.type,
         dueDate: payment.dueDate,
         category: payment.category,
         priority: payment.priority,
