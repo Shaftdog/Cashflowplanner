@@ -20,6 +20,7 @@ const getInitialItems = (): PaymentItem[] => {
       priority: 'medium',
       notes: 'Monthly order from Staples',
       createdAt: new Date().toISOString(),
+      isPaid: false,
     },
     {
       id: '2',
@@ -31,6 +32,7 @@ const getInitialItems = (): PaymentItem[] => {
       priority: 'high',
       notes: 'Quarterly payment',
       createdAt: new Date().toISOString(),
+      isPaid: false,
     },
     {
       id: '3',
@@ -42,6 +44,7 @@ const getInitialItems = (): PaymentItem[] => {
       priority: 'high',
       notes: 'Payment expected via ACH',
       createdAt: new Date().toISOString(),
+      isPaid: false,
     },
     {
       id: '4',
@@ -53,6 +56,7 @@ const getInitialItems = (): PaymentItem[] => {
       priority: 'critical',
       notes: 'Needs immediate attention',
       createdAt: new Date().toISOString(),
+      isPaid: false,
     },
     {
         id: '5',
@@ -64,6 +68,7 @@ const getInitialItems = (): PaymentItem[] => {
         priority: 'low',
         notes: 'Recurring monthly charge',
         createdAt: new Date().toISOString(),
+        isPaid: false,
     },
   ];
 };
