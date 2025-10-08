@@ -16,7 +16,7 @@ const PaymentItemSchema = z.object({
   id: z.string(),
   description: z.string(),
   amount: z.number(),
-  type: z.enum(['expense', 'revenue']).optional(),
+  type: z.enum(['expense', 'revenue']),
   dueDate: z.string(),
   category: z.enum(CATEGORY_NAMES),
   priority: z.enum(PRIORITIES),
