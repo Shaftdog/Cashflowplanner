@@ -34,6 +34,7 @@ interface RecurringProps {
   addExpense: (expense: Omit<RecurringExpense, 'id' | 'createdAt'>) => void;
   updateExpense: (id: string, expense: Partial<RecurringExpense>) => void;
   deleteExpense: (id: string) => void;
+  onClearScheduled?: () => void;
   onScheduleToCashflow?: (items: Omit<PaymentItem, 'id' | 'createdAt'>[]) => void;
 }
 
@@ -42,6 +43,7 @@ export default function Recurring({
   addExpense,
   updateExpense,
   deleteExpense,
+  onClearScheduled,
   onScheduleToCashflow,
 }: RecurringProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -210,14 +212,25 @@ export default function Recurring({
         </div>
         <div className="flex gap-2">
           {expenses.filter(e => e.isActive).length > 0 && onScheduleToCashflow && (
-            <Button 
-              onClick={handleScheduleToCashflow} 
-              disabled={isScheduling}
-              variant="outline"
-            >
-              <Sparkles className="mr-2 h-4 w-4" />
-              {isScheduling ? 'Scheduling...' : 'AI Schedule to Cashflow'}
-            </Button>
+            <>
+              {onClearScheduled && (
+                <Button 
+                  onClick={onClearScheduled} 
+                  variant="outline"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Clear Scheduled
+                </Button>
+              )}
+              <Button 
+                onClick={handleScheduleToCashflow} 
+                disabled={isScheduling}
+                variant="default"
+              >
+                <Sparkles className="mr-2 h-4 w-4" />
+                {isScheduling ? 'Scheduling...' : 'AI Schedule to Cashflow'}
+              </Button>
+            </>
           )}
           <Button onClick={handleAddNew}>
             <PlusCircle className="mr-2" />

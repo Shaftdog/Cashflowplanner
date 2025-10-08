@@ -76,6 +76,32 @@ export default function Home() {
     }
   };
 
+  const handleClearScheduled = () => {
+    const scheduledItems = items.filter(item => 
+      item.notes?.toLowerCase().includes('auto-scheduled from recurring')
+    );
+    
+    if (scheduledItems.length === 0) {
+      toast({
+        title: 'No Scheduled Items',
+        description: 'There are no auto-scheduled items to clear.',
+      });
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `This will remove ${scheduledItems.length} auto-scheduled item${scheduledItems.length !== 1 ? 's' : ''} from your cashflow. Continue?`
+    );
+    
+    if (confirmed) {
+      scheduledItems.forEach(item => deleteItem(item.id));
+      toast({
+        title: 'Scheduled Items Cleared',
+        description: `Removed ${scheduledItems.length} auto-scheduled item${scheduledItems.length !== 1 ? 's' : ''}.`,
+      });
+    }
+  };
+
   const handleImport = () => {
     fileInputRef.current?.click();
   };
@@ -176,6 +202,7 @@ export default function Home() {
             addExpense={addRecurringExpense}
             updateExpense={updateRecurringExpense}
             deleteExpense={deleteRecurringExpense}
+            onClearScheduled={handleClearScheduled}
             onScheduleToCashflow={(newItems) => {
               // Check for duplicates by matching description + dueDate + amount
               let addedCount = 0;
