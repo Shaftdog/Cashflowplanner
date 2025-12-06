@@ -1,0 +1,11 @@
+{
+  "lessons": [
+    {
+      "date": "2025-12-06",
+      "issue": "Overdue items reverting on refresh",
+      "cause": "checkOverdueItems() was called on page load, automatically moving items back to Overdue",
+      "fix": "Removed auto-call to checkOverdueItems() on data load to respect user's manual category assignments",
+      "file": "src/hooks/use-cashflow-data-supabase.ts"
+    }
+  ]
+}

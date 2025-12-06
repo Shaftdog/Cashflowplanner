@@ -68,8 +68,9 @@ export function useCashflowDataSupabase() {
 
         setItems(transformedItems);
 
-        // Check for overdue items after loading
-        checkOverdueItems(transformedItems);
+        // Note: We no longer auto-move items to Overdue on load
+        // This respects user's manual category assignments
+        // The overdue badge on item cards still provides visual indication
 
         // Load financials
         const { data: financialsData, error: financialsError } = await supabase
