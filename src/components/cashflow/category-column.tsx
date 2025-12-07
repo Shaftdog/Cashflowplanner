@@ -54,7 +54,9 @@ export default function CategoryColumn({
   );
   
   const categoryTotal = useMemo(
-    () => items.reduce((sum, item) => sum + item.amount, 0),
+    () => items.reduce((sum, item) => {
+      return item.type === 'revenue' ? sum + item.amount : sum - item.amount;
+    }, 0),
     [items]
   );
 
